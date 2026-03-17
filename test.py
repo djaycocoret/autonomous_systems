@@ -4,7 +4,32 @@ from gpiozero import DigitalOutputDevice, PWMOutputDevice
 
 
 class Wheel:
+    """A class representing a wheel
+
+    Attributes
+    __________
+    PWM : PWMOutputDevice
+        The pin connected to the Pulse Width Modulation connection on the L293D chip.
+        This pin changes the speed of the wheel.
+    forward_pin : DigitalOutputDevice
+        The pin connected to the forward connection on the L293D chip
+    backward_pin : DigitalOutputDevice
+        The pin connected to the backward connection on the L293D chip
+    """
+
     def __init__(self, forward_pin, backward_pin, PWM):
+        """Initialise the Wheel class
+
+        Parameters
+        __________
+        PWM : PWMOutputDevice
+            The pin connected to the Pulse Width Modulation connection on the L293D chip.
+            This pin changes the speed of the wheel.
+        forward_pin : DigitalOutputDevice
+            The pin connected to the forward connection on the L293D chip
+        backward_pin : DigitalOutputDevice
+            The pin connected to the backward connection on the L293D chip
+        """
         self.PWM = PWM
         self.forward_pin = forward_pin
         self.backward_pin = backward_pin
@@ -13,43 +38,91 @@ class Wheel:
         return f"Wheel object"
 
     def forward(self, speed=1):
+        """Makes the wheel move in the direction such that the agent moves forward
+
+        Parameters
+        __________
+        speed : int
+            The speed at which the wheel moves [0, 1]
+        """
         self.PWM.value = speed
         self.backward_pin.off()
         self.forward_pin.on()
 
     def stop(self):
+        """Makes the wheel stop"""
         self.backward_pin.off()
         self.forward_pin.off()
 
     def backward(self, speed=1):
+        """Makes the wheel move in the direction such that the agent moves backward
+
+        Parameters
+        __________
+        speed : int
+            The speed at which the wheel moves [0, 1]
+        """
         self.PWM.value = speed
         self.forward_pin.off()
         self.backward_pin.on()
 
 
 class Robot:
+    """A class representing a robot for the autonomous systems course 2026
+
+    Attributes
+    __________
+    left wheel : Wheel
+        The left wheel of the robot, oriented with the raspberry facing forwards
+    right wheel : Wheel
+        The right wheel of the robot, oriented with the raspberry facing forwards
+
+    """
+
     def __init__(self, left_wheel, right_wheel):
         self.left_wheel = left_wheel
         self.right_wheel = right_wheel
 
     def return_wheels(self) -> list[Wheel]:
+        """Return the wheels of the robot in a list"""
         return [self.left_wheel, self.right_wheel]
 
-    def forward(self):
+    def forward(self, speed=1):
+        """Changes the state of the robot to going forward
+
+        Parameters
+        __________
+        speed : int
+            The speed at which the agent will go forward [0, 1]"""
         for wheel in self.return_wheels():
-            wheel.forward()
+            wheel.forward(speed)
 
     def stop(self):
+        """Changes the state of the robot to stopped"""
         for wheel in self.return_wheels():
             wheel.stop()
 
-    def backward(self):
+    def backward(self, speed=1):
+        """Changes the state of the robot to going backward
+
+        Parameters
+        __________
+        speed : int
+            The speed at which the agent will go backward [0, 1]"""
         for wheel in self.return_wheels():
-            wheel.backward()
+            wheel.backward(speed)
 
     def slow_down(self, max=100, min=50):
-        for i in range(max, min, -1):
-            print(i / 100)
+        """Chances the state of the robot to slowing down.
+
+        Parameters
+        __________
+        max : int [0, 100]
+            The maximum speed, at which the slowing down starts.
+        min : int [0, 100]
+            The minimum speed, which will be achieved after having slowed down.
+        """
+        for i in range(max, min, -1):  # iterates from max to min with increments of 1.
             for wheel in self.return_wheels():
                 wheel.forward(speed=i / 100)
             sleep(0.5)
@@ -102,9 +175,6 @@ angry_dog = Robot(left_wheel, right_wheel)
 
 try:
     while True:
-        angry_dog.turn_left(duration=2)
-
-    while False:
         angry_dog.stop()
         print("Stop")
         sleep(delay_time)
