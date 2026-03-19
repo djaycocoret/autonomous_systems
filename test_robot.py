@@ -35,7 +35,7 @@ class Wheel:
         self.backward_pin = backward_pin
 
     def __repr__(self):
-        return f"Wheel object"
+        return f"Wheel object: forward pin: {self.forward_pin}, backward pin: {self.backward_pin}, PWM: {self.PWM}, speed: {self.PWM.value}"
 
     def forward(self, speed=1):
         """Makes the wheel move in the direction such that the agent moves forward
@@ -89,7 +89,7 @@ class Robot:
         right wheel : Wheel
             The right wheel of the robot, oriented with the raspberry facing forwards
 
-        WE BE CONTINUED
+        TO BE CONTINUED
         """
         self.left_wheel = left_wheel
         self.right_wheel = right_wheel
