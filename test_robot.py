@@ -42,8 +42,8 @@ class Wheel:
 
         Parameters
         __________
-        speed : int
-            The speed at which the wheel moves [0, 1]
+        speed : float [0, 1]
+            The speed at which the wheel moves
         """
         self.PWM.value = speed
         self.backward_pin.off()
@@ -59,8 +59,8 @@ class Wheel:
 
         Parameters
         __________
-        speed : int
-            The speed at which the wheel moves [0, 1]
+        speed : float [0, 1]
+            The speed at which the wheel moves
         """
         self.PWM.value = speed
         self.forward_pin.off()
@@ -80,6 +80,17 @@ class Robot:
     """
 
     def __init__(self, left_wheel, right_wheel):
+        """Initialises the robot
+
+        Parameters
+        __________
+        left wheel : Wheel
+            The left wheel of the robot, oriented with the raspberry facing forwards
+        right wheel : Wheel
+            The right wheel of the robot, oriented with the raspberry facing forwards
+
+        WE BE CONTINUED
+        """
         self.left_wheel = left_wheel
         self.right_wheel = right_wheel
 
@@ -92,8 +103,8 @@ class Robot:
 
         Parameters
         __________
-        speed : int
-            The speed at which the agent will go forward [0, 1]"""
+        speed : float [0, 1]
+            The speed at which the agent will go forward"""
         for wheel in self.return_wheels():
             wheel.forward(speed)
 
@@ -107,8 +118,8 @@ class Robot:
 
         Parameters
         __________
-        speed : int
-            The speed at which the agent will go backward [0, 1]"""
+        speed : float [0 , 1]
+            The speed at which the agent will go backward"""
         for wheel in self.return_wheels():
             wheel.backward(speed)
 
@@ -125,22 +136,49 @@ class Robot:
         for i in range(max, min, -1):  # iterates from max to min with increments of 1.
             for wheel in self.return_wheels():
                 wheel.forward(speed=i / 100)
-            sleep(0.5)
+            sleep(0.5)  # TODO fix this.
 
     def speed_up(self, max=100, min=50):
+        """Chances the state of the robot to speeding up.
+
+        Parameters
+        __________
+        max : int [0, 100]
+            The maximum speed, which will be achieved after having sped up.
+        min : int [0, 100]
+            The minimum speed, at which the speeding up begins.
+        """
         for i in range(min, max, 1):
             print(i / 100)
             for wheel in self.return_wheels():
                 wheel.forward(speed=i / 100)
-            sleep(0.5)
+            sleep(0.5)  # TODO fix this.
 
     def turn_left(self, speed=1, duration=0.5):
+        """Makes the robot turn left for a specified duration
+
+        Parameters
+        __________
+        speed : float [0, 1]
+            The speed at which the robot will turn
+        duration : float
+            The duration of the turn movement in seconds
+        """
         self.left_wheel.forward()
         self.right_wheel.stop()
         sleep(duration)
         self.stop()
 
     def spin(self, direction, duration=0.5):
+        """Makes the robot spin for a specified duration
+
+        Parameters
+        __________
+        direction : str ('L', 'R')
+            The direction how the robot will spin
+        duration : float
+            The duration of the spin movement in seconds
+        """
         if direction.upper() == "L":
             self.left_wheel.forward()
             self.right_wheel.backward()
@@ -155,6 +193,8 @@ class Robot:
         else:
             raise ValueError("Direction must be either left or right")
 
+
+# ugly test code
 
 forward_pin = DigitalOutputDevice(17)
 backward_pin = DigitalOutputDevice(27)
