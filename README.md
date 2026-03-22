@@ -11,7 +11,7 @@ After connecting to the wifi network, we must connect to the raspberry's termina
 Run the following in the terminal of your laptop:
 
 ```zsh
-ssh group3@10.42.0.1
+ssh group3@angry-dog-pi.local
 ```
 
 > Note: first time when connecting you might need to give your computer access to connect to a remote server.
