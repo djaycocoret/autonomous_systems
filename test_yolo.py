@@ -1,6 +1,8 @@
 import cv2
 from ultralytics import YOLO
 
+print("starting")
+
 model = YOLO("yolo26n.pt")
 
 img = cv2.imread("./files/cat.jpg")

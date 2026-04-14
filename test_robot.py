@@ -137,13 +137,14 @@ class Visual_processing:
 
     Attributes
     __________
-    model : YOLO [idk i have to look up data type]
+    model : ultralytics.models.yolo.model.YOLO
         The model that will classify the images.
     """
 
     def __init__(self, model):
         """Initialises the visual processing class"""
-        self.model = model
+        self.model = YOLO(model)
+        print(type(self.model))
 
     def locate_cat(self, input):
         """Locates a cat, if found,
@@ -151,8 +152,31 @@ class Visual_processing:
         Parameters
         __________
         input : np.array
-            The captured image as a numpy array"""
+            The captured image as a numpy array
+
+        Returns
+        _______
+        offset : float [-1, 1] or None
+            KKKKKKK
+        """
+
+        h_img, w_img, _ = input.shape
+
         results = self.model.predict(input)
+
+        for result in results:
+            boxes = result.boxes
+            for box in boxes:
+                cls_id = int(box.cls[0])
+                cls = result.names[cls_id]
+                x, y, _, _ = box.xywh[0]
+                print(f"{cls} at ({x}, {y})")
+                if cls == "cat":
+                    offset = float((x - w_img / 2) / w_img)
+                    return offset
+                else:
+                    continue
+        return None
 
 
 class Visual_perception:
@@ -169,7 +193,12 @@ class Robot:
         The left motor of the robot, oriented with the raspberry facing forwards
     right motor : Motor
         The right motor of the robot, oriented with the raspberry facing forwards
-
+    audio : Audio_processing
+        The audio interface of the robot
+    visual_proc : Visual_processing
+        The object detection pipeline
+    camera : Visual_perception
+        The camera sensor of the robot
     """
 
     def __init__(self, left_motor, right_motor, audio):
@@ -189,6 +218,7 @@ class Robot:
         self.left_motor = left_motor
         self.right_motor = right_motor
         self.audio = audio
+        self.visual_proc = Visual_processing("yolo26n.pt")
 
     def return_motors(self) -> list[Motor]:
         """Return the wheels of the robot in a list"""
