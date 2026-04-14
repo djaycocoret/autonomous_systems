@@ -1,6 +1,10 @@
+import subprocess
+from random import randint
 from time import sleep
 
+import cv2
 from gpiozero import DigitalOutputDevice, PWMOutputDevice
+from ultralytics import YOLO
 
 
 def check_speed(speed):
@@ -19,6 +23,49 @@ def check_speed(speed):
     """
 
     return max(0, min(1, speed))
+
+
+def play_wav(path):
+    subprocess.run(["aplay", path])
+
+
+class Audio_processing:
+    """A class representing the audio making module of the robot
+
+    Attributes
+    __________
+    barks : List[str]
+        A list containing the path at which the various audio samples of barks reside
+    growl : List[str]
+        A list containing the path at which the various audio samples of barks reside"""
+
+    def __init__(self, bark, growl):
+        """Initialses the Audio_processing class
+
+        Parameters
+        __________
+        bark : List(str)
+            A list containing one or several paths of a bark audio sample in wav format
+        growl : List(str)
+            A list containing one or several paths of a growl audio sample in wav format
+        """
+        self.bark_ = list()
+        self.bark_.extend(bark)
+
+        self.growl_ = list()
+        self.growl_.extend(growl)
+
+    def bark(self):
+        max = len(self.bark_)
+        index = randint(0, max - 1)
+        path = self.bark_[index]
+        play_wav(path)
+
+    def growl(self):
+        max = len(self.growl_)
+        index = randint(0, max - 1)
+        path = self.growl_[index]
+        play_wav(path)
 
 
 class Motor:
@@ -85,6 +132,34 @@ class Motor:
         self.backward_pin.on()
 
 
+class Visual_processing:
+    """A class representing the visual processing
+
+    Attributes
+    __________
+    model : YOLO [idk i have to look up data type]
+        The model that will classify the images.
+    """
+
+    def __init__(self, model):
+        """Initialises the visual processing class"""
+        self.model = model
+
+    def locate_cat(self, input):
+        """Locates a cat, if found,
+
+        Parameters
+        __________
+        input : np.array
+            The captured image as a numpy array"""
+        results = self.model.predict(input)
+
+
+class Visual_perception:
+    def __init__(self):
+        pass
+
+
 class Robot:
     """A class representing a robot for the autonomous systems course 2026
 
@@ -97,7 +172,7 @@ class Robot:
 
     """
 
-    def __init__(self, left_motor, right_motor):
+    def __init__(self, left_motor, right_motor, audio):
         """Initialises the robot
 
         Parameters
@@ -106,11 +181,14 @@ class Robot:
             The left motor of the robot, oriented with the raspberry facing forwards
         right motor : Wheel
             The right motor of the robot, oriented with the raspberry facing forwards
+        audio : Audio_processing
+            The audio interface of the robot.
 
         TO BE CONTINUED
         """
         self.left_motor = left_motor
         self.right_motor = right_motor
+        self.audio = audio
 
     def return_motors(self) -> list[Motor]:
         """Return the wheels of the robot in a list"""
@@ -211,24 +289,34 @@ class Robot:
         else:
             raise ValueError("Direction must be either left or right")
 
+    def bark(self):
+        """Plays a randomly selected bark sample"""
+        self.audio.bark()
+
+    def growl(self):
+        """Plays a randomly selected growl sample"""
+        self.audio.growl()
+
 
 # ugly test code
+delay_time = 2.0  # seconds
 
 forward_pin = DigitalOutputDevice(17)
 backward_pin = DigitalOutputDevice(27)
 PWM_pin = PWMOutputDevice(12)
+right_wheel = Motor(forward_pin, backward_pin, PWM_pin)
 
 forward_pin_2 = DigitalOutputDevice(23)
 backward_pin_2 = DigitalOutputDevice(24)
 PWM_pin_2 = PWMOutputDevice(13)
-
-delay_time = 2.0  # seconds
-
-
-right_wheel = Motor(forward_pin, backward_pin, PWM_pin)
 left_wheel = Motor(forward_pin_2, backward_pin_2, PWM_pin_2)
 
-angry_dog = Robot(left_wheel, right_wheel)
+audio = Audio_processing(
+    ["files/audio/KSHMR_Animals_12_Dog_A.wav"],
+    ["files/audio/KSHMR_Animals_13_Dog_Growl.wav"],
+)
+
+angry_dog = Robot(left_wheel, right_wheel, audio)
 
 # comment
 
