@@ -1,0 +1,93 @@
+\documentclass[conference]{IEEEtran}
+
+% --- PACKAGES ---
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs} % Professional tables
+\usepackage{verse}    % For linguistic stimuli
+\usepackage{tcolorbox} % For safe/unsafe boxes
+
+% --- HYPERLINKS ---
+% IEEE usually discourages colored links for printing, but for digital assignments:
+\usepackage[colorlinks=true, linkcolor=black, citecolor=black, urlcolor=blue]{hyperref}
+
+% --- TITLE & AUTHORS ---
+\title{You Only Bark Once: Employing Object Detection\\ to Guide a Robot-Dog}
+
+% IEEE standard "Conference" author block
+\author{
+    \IEEEauthorblockN{Djayco Coret}
+    \IEEEauthorblockA{\textit{Dept. of Cognitive Science \& AI} \\
+    \textit{Tilburg University}\\
+    Student ID: 123456 \\
+    your.name@tilburguniversity.edu}
+    \and
+    \IEEEauthorblockN{Ivo Snels}
+    \IEEEauthorblockA{\textit{Dept. of Cognitive Science \& AI} \\
+    \textit{Tilburg University}\\
+    Student ID: 123456 \\
+    your.name@tilburguniversity.edu}
+    \and
+    \IEEEauthorblockN{Niels Coumans}
+    \IEEEauthorblockA{\textit{Dept. of Cognitive Science \& AI} \\
+    \textit{Tilburg University}\\
+    Student ID: 123456 \\
+    your.name@tilburguniversity.edu}
+    \and
+    \IEEEauthorblockN{Demir xx}
+    \IEEEauthorblockA{\textit{Dept. of Cognitive Science \& AI} \\
+    \textit{Tilburg University}\\
+    Student ID: 123456 \\
+    your.name@tilburguniversity.edu}
+    \and
+    \IEEEauthorblockN{William xx}
+    \IEEEauthorblockA{\textit{Dept. of Cognitive Science \& AI} \\
+    \textit{Tilburg University}\\
+    Student ID: 123456 \\
+    your.name@tilburguniversity.edu}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This document replicates the IEEE format, which is strictly two-column and 10pt font. It is the standard for the engineering and applied AI side of your Master's program. This abstract should be bold and concise (usually under 200 words).
+\end{abstract}
+
+\begin{IEEEkeywords}
+Edge AI, Embodiment, Autonomous Systems, Robotics
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+\section{Methods}
+
+\subsection{Perceiving}
+The agent perceives the world through a RGB camera, depth camera, and gyroscope.
+The RGB camera is used to generate input for the object detection model.
+The depth camera is used to ensure the agent does not crash into things.
+The gyroscope is used to get the angular momentum,
+such that inaccuracies in the motors will be corrected (More on this in \ref{move}).
+
+\subsection{Moving}
+\label{move}
+The agent has two wheels that allow it to move in the environment.
+
+\subsection{Social Agent}
+The agent has led light in it's eyes, to signal the current 'mental state'.
+
+\subsection{Practical Implementation}
+
+
+\section{Discussion}
+
+
+\bibliographystyle{IEEEtran}
+\bibliography{../ref}
+
+\end{document}

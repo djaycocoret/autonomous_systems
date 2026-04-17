@@ -1,32 +1,11 @@
-import subprocess
 from random import randint
 from time import sleep
 
 import cv2
 from gpiozero import DigitalOutputDevice, PWMOutputDevice
-from ultralytics import YOLO
 
-
-def check_speed(speed):
-    """A function that return a value between 0 and 1, which has predictable behaviour with the motor class
-
-    Parameters
-    __________
-
-    speed : float
-        The input speed
-
-    Returns
-    _______
-    float
-        The output speed, which is limited to a range of [0, 1]
-    """
-
-    return max(0, min(1, speed))
-
-
-def play_wav(path):
-    subprocess.run(["aplay", path])
+from helper_functions import check_speed, play_wav
+from visual_processing import Visual_processing
 
 
 class Audio_processing:
@@ -56,12 +35,14 @@ class Audio_processing:
         self.growl_.extend(growl)
 
     def bark(self):
+        """Plays a random bark audio sample"""
         max = len(self.bark_)
         index = randint(0, max - 1)
         path = self.bark_[index]
         play_wav(path)
 
     def growl(self):
+        """ "Plats a random growl audio sample"""
         max = len(self.growl_)
         index = randint(0, max - 1)
         path = self.growl_[index]
@@ -132,53 +113,6 @@ class Motor:
         self.backward_pin.on()
 
 
-class Visual_processing:
-    """A class representing the visual processing
-
-    Attributes
-    __________
-    model : ultralytics.models.yolo.model.YOLO
-        The model that will classify the images.
-    """
-
-    def __init__(self, model):
-        """Initialises the visual processing class"""
-        self.model = YOLO(model)
-        print(type(self.model))
-
-    def locate_cat(self, input):
-        """Locates a cat, if found,
-
-        Parameters
-        __________
-        input : np.array
-            The captured image as a numpy array
-
-        Returns
-        _______
-        offset : float [-1, 1] or None
-            KKKKKKK
-        """
-
-        h_img, w_img, _ = input.shape
-
-        results = self.model.predict(input)
-
-        for result in results:
-            boxes = result.boxes
-            for box in boxes:
-                cls_id = int(box.cls[0])
-                cls = result.names[cls_id]
-                x, y, _, _ = box.xywh[0]
-                print(f"{cls} at ({x}, {y})")
-                if cls == "cat":
-                    offset = float((x - w_img / 2) / w_img)
-                    return offset
-                else:
-                    continue
-        return None
-
-
 class Visual_perception:
     def __init__(self):
         pass
@@ -201,7 +135,7 @@ class Robot:
         The camera sensor of the robot
     """
 
-    def __init__(self, left_motor, right_motor, audio):
+    def __init__(self, left_motor, right_motor, audio, vis_proc):
         """Initialises the robot
 
         Parameters
@@ -212,13 +146,15 @@ class Robot:
             The right motor of the robot, oriented with the raspberry facing forwards
         audio : Audio_processing
             The audio interface of the robot.
+        visual_processing : Visual_processing
+            The visual processing part of the robot.
 
         TO BE CONTINUED
         """
         self.left_motor = left_motor
         self.right_motor = right_motor
         self.audio = audio
-        self.visual_proc = Visual_processing("yolo26n.pt")
+        self.visual_proc = vis_proc
 
     def return_motors(self) -> list[Motor]:
         """Return the wheels of the robot in a list"""
@@ -327,6 +263,10 @@ class Robot:
         """Plays a randomly selected growl sample"""
         self.audio.growl()
 
+    def locate_cat(self, frame):
+        offset = self.visual_proc.locate_cat(frame)
+        return offset
+
 
 # ugly test code
 delay_time = 2.0  # seconds
@@ -346,28 +286,24 @@ audio = Audio_processing(
     ["files/audio/KSHMR_Animals_13_Dog_Growl.wav"],
 )
 
-angry_dog = Robot(left_wheel, right_wheel, audio)
+visual_processing = Visual_processing("yolo26n.pt")
 
-# comment
+angry_dog = Robot(left_wheel, right_wheel, audio, visual_processing)
 
+cap = cv2.VideoCapture(0)
 
 try:
     while True:
-        angry_dog.stop()
-        print("Stop")
-        sleep(delay_time)
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-        angry_dog.forward()
-        print("Forward")
-        sleep(delay_time)
+        # the perception action loop goes here.
 
-        angry_dog.stop()
-        print("Stop")
-        sleep(delay_time)
+        offset = angry_dog.locate_cat(frame)
 
-        angry_dog.backward()
-        print("Backward")
-        sleep(delay_time)
+        if cv2.waitKey(1) == ord("q"):
+            break
 
 except KeyboardInterrupt:
     angry_dog.stop()
