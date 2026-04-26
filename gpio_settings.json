@@ -1,0 +1,13 @@
+{
+    "forward_pin_right": 17,
+    "backward_pin_right": 27,
+    "enable_pin_right": 12,
+    "forward_pin_left": 23,
+    "backward_pin_left": 24,
+    "enable_pin_left": 13,
+    "distance_trigger_pin": 5,
+    "distance_echo_pin": 6,
+    "growl_dir": "/home/group3/autonomous_systems/files/audio/growls",
+    "bark_dir": "/home/group3/autonomous_systems/files/audio/barks",
+    "yolo_model": "yolo26n.pt"
+}

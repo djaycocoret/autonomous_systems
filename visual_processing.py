@@ -17,7 +17,7 @@ class Visual_processing:
         self.model = YOLO(model)
         self.confidence_threshold = confidence_threshold
 
-    def locate_cat(self, input):
+    def locate_cat(self, input) -> tuple[float, bool]:
         """Locates a cat, if found, returns a scaled value how off centre the target is.
 
         Parameters
@@ -27,9 +27,10 @@ class Visual_processing:
 
         Returns
         _______
-        offset : float [-0.5, 0.5]
+        offset : tuple[float, bool]
             idk how to describe it yet.
             0 can be 0 offset of nothing in image
+            Also return the boolean value which states if it has found something
         """
 
         h_img, w_img, _ = input.shape
@@ -42,10 +43,9 @@ class Visual_processing:
                 cls_id = int(box.cls[0])
                 cls = result.names[cls_id]
                 x, y, _, _ = box.xywh[0]
-                print(f"{cls} at ({x}, {y}), with confidence {box.conf[0]}")
-                if cls == "cat":
+                if box.conf[0] >= self.confidence_threshold:
+                    print(f"{cls} at ({x}, {y}), with confidence {box.conf[0]}")
+                if cls == "cat" and box.conf[0] >= self.confidence_threshold:
                     offset = float((x - w_img / 2) / w_img)
-                    return offset
-                else:
-                    continue
-        return 0
+                    return offset, True
+        return 0, False

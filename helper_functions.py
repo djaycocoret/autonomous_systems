@@ -1,4 +1,5 @@
 import subprocess
+from pathlib import Path
 
 
 def check_speed(speed):
@@ -21,3 +22,9 @@ def check_speed(speed):
 
 def play_wav(path):
     subprocess.run(["aplay", path])
+
+
+def get_wav_files(directory_path):
+    path = Path(directory_path)
+    wav_files = [str(file) for file in path.glob("*.wav")]
+    return wav_files

@@ -11,14 +11,14 @@ After connecting to the wifi network, we must connect to the raspberry's termina
 Run the following in the terminal of your laptop:
 
 ```zsh
-ssh group3@angry-dog-pi.local
+ssh group3@as-pi.local
 ```
 
 > Note: first time when connecting you might need to give your computer access to connect to a remote server.
 
 You will be asked for a password, use the same password as used earlier. 
 
-This should show in your terminal: __group3@angry-dog-pi:~ $__
+This should show in your terminal: __group3@as-pi:~ $__
 You are now using the terminal of the raspberry pi.
 
 ## How to find the right files
@@ -30,13 +30,25 @@ We do that by using the change directory command followed by the directory
 cd files/autonomous_systems
 ```
 
-Your terminal should now show __group3@angry-dog-pi:~/files/autonomous_systems $__
+Your terminal should now show: __group3@as-pi:~/autonomous_systems $__
 
 To list the contents of the current directory, you may use the ls command
 
 ```zsh
 ls
 ```
+
+## How to activate the virtual environment
+
+We are using a virtual environment, which allows for modules to be installed in just the environment.
+Thus to use the modules we are using in our code, we must activate the virtual environment first.
+Use the following terminal command.
+
+```zsh
+source env/bin/activate
+```
+
+Your terminal should now show: (env) __group3@as-pi:~/autonomous_systems $__
 
 ## How to run something
 Since we are using python, we use the python command, followed by the filename.

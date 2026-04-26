@@ -1,127 +1,10 @@
 import json
 import time
-from random import randint
 from time import sleep
 
-import cv2
-from gpiozero import DigitalOutputDevice, DistanceSensor, PWMOutputDevice
-
-from camera import Camera
-from helper_functions import check_speed, play_wav
+from dummy_robot import Dummy_audio, Dummy_camera, Dummy_distance_sensor, Dummy_motor
+from helper_functions import get_wav_files
 from visual_processing import Visual_processing
-
-
-class Audio_processing:
-    """A class representing the audio making module of the robot
-
-    Attributes
-    __________
-    barks : List[str]
-        A list containing the path at which the various audio samples of barks reside
-    growl : List[str]
-        A list containing the path at which the various audio samples of barks reside"""
-
-    def __init__(self, bark, growl):
-        """Initialses the Audio_processing class
-
-        Parameters
-        __________
-        bark : List(str)
-            A list containing one or several paths of a bark audio sample in wav format
-        growl : List(str)
-            A list containing one or several paths of a growl audio sample in wav format
-        """
-        self.bark_ = list()
-        self.bark_.extend(bark)
-
-        self.growl_ = list()
-        self.growl_.extend(growl)
-
-    def bark(self):
-        """Plays a random bark audio sample"""
-        max = len(self.bark_)
-        index = randint(0, max - 1)
-        path = self.bark_[index]
-        play_wav(path)
-
-    def growl(self):
-        """ "Plats a random growl audio sample"""
-        max = len(self.growl_)
-        index = randint(0, max - 1)
-        path = self.growl_[index]
-        play_wav(path)
-
-
-class Distance_sensor:
-    def __init__(self, trigger_pin, echo_pin):
-        self.sensor = DistanceSensor(trigger_pin, echo_pin)
-
-    def safe_distance(self, safe_distance: float):
-        return self.sensor.distance > safe_distance
-
-
-class Motor:
-    """A class representing a motor
-
-    Attributes
-    __________
-    PWM : PWMOutputDevice
-        The pin connected to the Pulse Width Modulation connection on the L293D chip.
-        This pin changes the speed of the motor.
-    forward_pin : DigitalOutputDevice
-        The pin connected to the forward connection on the L293D chip
-    backward_pin : DigitalOutputDevice
-        The pin connected to the backward connection on the L293D chip
-    """
-
-    def __init__(self, forward_pin, backward_pin, PWM):
-        """Initialise the motor class
-
-        Parameters
-        __________
-        PWM : PWMOutputDevice
-            The pin connected to the Pulse Width Modulation connection on the L293D chip.
-            This pin changes the speed of the motor.
-        forward_pin : DigitalOutputDevice
-            The pin connected to the forward connection on the L293D chip
-        backward_pin : DigitalOutputDevice
-            The pin connected to the backward connection on the L293D chip
-        """
-        self.PWM = PWM
-        self.forward_pin = forward_pin
-        self.backward_pin = backward_pin
-
-    def __repr__(self):
-        return f"Motor object: forward pin: {self.forward_pin}, backward pin: {self.backward_pin}, PWM: {self.PWM}, speed: {self.PWM.value}"
-
-    def forward(self, speed=1.0):
-        """Makes the motor move in the direction such that the agent moves forward
-
-        Parameters
-        __________
-        speed : float [0, 1]
-            The speed at which the motor moves
-        """
-        self.PWM.value = check_speed(speed)
-        self.backward_pin.off()
-        self.forward_pin.on()
-
-    def stop(self):
-        """Makes the motor stop"""
-        self.backward_pin.off()
-        self.forward_pin.off()
-
-    def backward(self, speed=1):
-        """Makes the motor move in the direction such that the agent moves backward
-
-        Parameters
-        __________
-        speed : float [0, 1]
-            The speed at which the motor moves
-        """
-        self.PWM.value = check_speed(speed)
-        self.forward_pin.off()
-        self.backward_pin.on()
 
 
 class Robot:
@@ -175,44 +58,56 @@ class Robot:
         self.safety_distance = 0.2
 
     @classmethod
-    def from_config(cls, json_path, yolo_model="yolo26n.pt"):
+    def from_config(cls, json_path):
+        # imports inside the config because otherwise it does not run on laptops
+        from camera import Camera
+        from sensors_actuator_wrappers import Audio_processing, Distance_sensor, Motor
+
         with open(json_path, "r") as file:
             gpio_settings = json.load(file)
 
         right_motor = Motor(
-            DigitalOutputDevice(gpio_settings["forward_pin_right"]),
-            DigitalOutputDevice(gpio_settings["backward_pin_right"]),
-            PWMOutputDevice(gpio_settings["enable_pin_right"]),
+            gpio_settings["forward_pin_right"],
+            gpio_settings["backward_pin_right"],
+            gpio_settings["enable_pin_right"],
         )
 
         left_motor = Motor(
-            DigitalOutputDevice(gpio_settings["forward_pin_left"]),
-            DigitalOutputDevice(gpio_settings["backward_pin_left"]),
-            PWMOutputDevice(gpio_settings["enable_pin_left"]),
+            gpio_settings["forward_pin_left"],
+            gpio_settings["backward_pin_left"],
+            gpio_settings["enable_pin_left"],
         )
 
         distance_sensor = Distance_sensor(
             gpio_settings["distance_trigger_pin"], gpio_settings["distance_echo_pin"]
         )
 
-        ##placeholder
-        #
-        # TODO make it such that it scans the ./files/audio directory and adds to a list
+        barks = get_wav_files(gpio_settings["bark_dir"])
+        growls = get_wav_files(gpio_settings["growl_dir"])
+        audio = Audio_processing(barks, growls)
 
-        audio = Audio_processing(
-            ["files/audio/KSHMR_Animals_12_Dog_A.wav"],
-            ["files/audio/KSHMR_Animals_13_Dog_Growl.wav"],
-        )
-
-        ##end placeholder
-
-        visual_proc = Visual_processing(yolo_model)
+        visual_proc = Visual_processing(gpio_settings["yolo_model"])
 
         camera = Camera()
 
         return cls(left_motor, right_motor, audio, visual_proc, distance_sensor, camera)
 
-    def return_motors(self) -> list[Motor]:
+    @classmethod
+    def dummy_config(cls, dummy_image, yolo_model):
+        right_motor = Dummy_motor("right")
+        left_motor = Dummy_motor("left")
+
+        distance_sensor = Dummy_distance_sensor(0.6)
+
+        audio = Dummy_audio()
+
+        visual_proc = Visual_processing(yolo_model)
+
+        camera = Dummy_camera(dummy_image)
+
+        return cls(left_motor, right_motor, audio, visual_proc, distance_sensor, camera)
+
+    def return_motors(self) -> list:
         """Return the wheels of the robot in a list"""
         return [self.left_motor, self.right_motor]
 
@@ -380,14 +275,12 @@ class Robot:
             self.right_motor.backward(speed=max * ratio)
 
 
-angry_dog = Robot.from_config("gpio_settings.json")
+if __name__ == "__main__":
+    print("this contains only class definitions. to run the robot run something else")
 
-try:
-    while True:
-        # the perception action loop goes here.
-        frame = angry_dog.capture_image()
-        offset, found = angry_dog.locate_cat(frame)
-        print(offset, found)
+    bitch = Robot.dummy_config(
+        dummy_image="/home/group3/autonomous_systems/files/test images/cat.jpg",
+        yolo_model="/home/group3/autonomous_systems/yolo26n.pt",
+    )
 
-except KeyboardInterrupt:
-    angry_dog.stop(stop_cam=True)
+    bitch.forward()
