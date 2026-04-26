@@ -29,11 +29,20 @@ class Robot:
     camera : Camera
         The camera sensor of the robot
     safety_distance : float
-        The minimum distance between the robot and the object detected by the distance senser
+        The minimum distance between the robot and the object detected by the distance sensor
+    verbose : bool
+        True if you want stuff printed in the console
     """
 
     def __init__(
-        self, left_motor, right_motor, audio_proc, vis_proc, distance_sensor, camera
+        self,
+        left_motor,
+        right_motor,
+        audio_proc,
+        vis_proc,
+        distance_sensor,
+        camera,
+        verbose=False,
     ):
         """Initialises the robot
 
@@ -51,8 +60,8 @@ class Robot:
             The depth measuring capabilities of the robot.
         camera : Camera
             The camera of the robot.
-
-        TO BE CONTINUED
+        verbose: bool
+            Verbosity
         """
         self.left_motor = left_motor
         self.right_motor = right_motor
@@ -62,9 +71,18 @@ class Robot:
         self.camera = camera
 
         self.safety_distance = 0.2
+        self.verbose = verbose
 
     @classmethod
     def from_config(cls, json_path):
+        """
+        Initialises the robot from a config file
+
+        Parameters
+        __________
+        json_path: str
+            The file path of the json file (e.g., 'gpio_settings.json)'
+        """
         # imports inside the config because otherwise it does not run on laptops
         from camera import Camera
         from sensors_actuator_wrappers import Audio_processing, Distance_sensor, Motor
@@ -100,6 +118,18 @@ class Robot:
 
     @classmethod
     def dummy_config(cls, dummy_image, yolo_model, webcam=False):
+        """Initialises the robot with dummy hardware abilities, giving one the capacity to run on device other than raspberry pi.
+
+        Parameters
+        __________
+        dummy_image: str
+            the path of the image used as input for the fake 'camera'
+            note: will not be used when using webcam
+        yolo_model: str
+            the path of the yolo model that will be used
+        webcam: bool
+            True if you want to use your own webcam
+        """
         right_motor = Dummy_motor("right")
         left_motor = Dummy_motor("left")
 
@@ -114,7 +144,17 @@ class Robot:
         else:
             camera = Dummy_camera(dummy_image)
 
-        return cls(left_motor, right_motor, audio, visual_proc, distance_sensor, camera)
+        verbose = True
+
+        return cls(
+            left_motor,
+            right_motor,
+            audio,
+            visual_proc,
+            distance_sensor,
+            camera,
+            verbose,
+        )
 
     def return_motors(self) -> list:
         """Return the wheels of the robot in a list"""
@@ -147,37 +187,6 @@ class Robot:
             The speed at which the agent will go backward"""
         for motor in self.return_motors():
             motor.backward(speed)
-
-    def slow_down(self, max=100, min=50):
-        """Chances the state of the robot to slowing down.
-
-        Parameters
-        __________
-        max : int [0, 100]
-            The maximum speed, at which the slowing down starts.
-        min : int [0, 100]
-            The minimum speed, which will be achieved after having slowed down.
-        """
-        for i in range(max, min, -1):  # iterates from max to min with increments of 1.
-            for motor in self.return_motors():
-                motor.forward(speed=i / 100)
-            sleep(0.5)  # TODO fix this.
-
-    def speed_up(self, max=100, min=50):
-        """Chances the state of the robot to speeding up.
-
-        Parameters
-        __________
-        max : int [0, 100]
-            The maximum speed, which will be achieved after having sped up.
-        min : int [0, 100]
-            The minimum speed, at which the speeding up begins.
-        """
-        for i in range(min, max, 1):
-            print(i / 100)
-            for wheel in self.return_motors():
-                wheel.forward(speed=i / 100)
-            sleep(0.5)  # TODO fix this.
 
     def turn_left(self, speed=1, duration=0.5):
         """Makes the robot turn left for a specified duration
@@ -227,15 +236,67 @@ class Robot:
         self.audio.growl()
 
     def locate_cat(self, frame):
+        """Method that locates cat and if found returns offset from center.
+
+        Parameters
+        __________
+        frame: NDarray
+            The image in which a cat has to be located
+
+        Returns
+        _______
+        offset: float
+            a scaled value [-0.5, 0.5] that signals how off center the cat is.
+        found: bool
+            True if a cat is found; False if no cat is found.
+        """
         offset, found = self.visual_proc.locate_cat(frame)
+
+        if self.verbose:
+            print(f"offset: {offset}")
+
         return offset, found
 
     def capture_image(self):
+        """Method to capture image from the camera
+
+        Returns
+        _______
+        frame: NDarray
+            the image captured by the camera"""
         frame = self.camera.capture()
         return frame
 
     def can_move_fwd(self):
-        return self.distance_sensor.safe_distance(self.safety_distance)
+        """Method that checks if it is safe to move forward
+
+        Returns
+        _______
+        safe: bool
+            True if can move forward; False if it cannot.
+        """
+        safe = self.distance_sensor.safe_distance(self.safety_distance)
+        return safe
+
+    def chase(self, offset):
+        """Method for chasing
+
+        Sets the wheels to forwards and calculates speed for the wheels to steer
+
+        Parameters
+        __________
+        offset : float
+            the offset from center [-0.5, 0.5]
+        """
+
+        value_left, value_right = 1, 1  # will be used for smoothing
+
+        if offset > 0:
+            self.left_motor.forward(value_left)
+            self.right_motor.forward(value_right - offset)
+        else:
+            self.left_motor.forward(value_left - offset)
+            self.right_motor.forward(value_right)
 
     ######
 

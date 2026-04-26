@@ -61,16 +61,15 @@ class Brain:
         elif self.state == State.CHASING and not found:
             self.state = State.SEARCHING
 
-        # your states here
-
     def execute_behaviour(self, offset):
-        # your behaviour here
-        #
         if self.state == State.IDLE:
             self.robot.stop()
 
         elif self.state == State.SEARCHING:
             self.robot.spin("R", duration=0.1)
+
+        elif self.state == State.CHASING:
+            self.robot.chase(offset)
 
         if self.state == State.BLOCKED:
             self.robot.stop()
@@ -81,11 +80,11 @@ class Brain:
 
 if __name__ == "__main__":
     # brain = Brain.from_config("gpio_settings.json")
-    brain = Brain.dummy_config()
+    brain = Brain.dummy_config(True)
 
     try:
         while True:
-            brain.update()
+            brain.update(verbose=True)
 
     except KeyboardInterrupt:
         brain.stop()
