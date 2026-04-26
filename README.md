@@ -78,3 +78,30 @@ Type exit to stop the ssh connection.
 ```zsh
 exit
 ```
+
+## How to run the dummy code on your own computer
+
+Make sure you have a virtual environment set up and activated. 
+
+```zsh
+python -m venv env
+source env/bin/activate
+```
+
+Make sure you have all required dependencies.
+
+```zsh
+pip install -r requirements_dummy.txt
+```
+
+You will not be able to do that much.
+However, you will be able to run the dummy code on your own device, without the hardware of the pi. 
+Moreover, this gives you the opportunity to mess around with the code, and see what behaviour you might want to implement. 
+I suggest you only adjust the brain.py program, focusing on the _state_logic and execute_behaviour methods.
+
+
+Run the dummy.py code
+
+```zsh
+python dummy.py
+```

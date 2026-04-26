@@ -46,3 +46,30 @@ class Dummy_camera:
 
     def stop(self):
         print("camera stopped")
+
+
+class Webcam:
+    def __init__(self) -> None:
+        self.cam = cv2.VideoCapture(0)
+
+        self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
+        if not self.cam.isOpened():
+            raise RuntimeError("Could not open webcam.")
+
+    def capture(self, file_name=None):
+        ret, frame = self.cam.read()
+
+        if not ret:
+            print("Failed to grab frame")
+            return None
+
+        if file_name:
+            cv2.imwrite(f"{file_name}.jpg", frame)
+
+        return frame
+
+    def stop(self):
+        # Release the hardware resource
+        self.cam.release()

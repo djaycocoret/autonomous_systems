@@ -2,7 +2,13 @@ import json
 import time
 from time import sleep
 
-from dummy_robot import Dummy_audio, Dummy_camera, Dummy_distance_sensor, Dummy_motor
+from dummy_robot import (
+    Dummy_audio,
+    Dummy_camera,
+    Dummy_distance_sensor,
+    Dummy_motor,
+    Webcam,
+)
 from helper_functions import get_wav_files
 from visual_processing import Visual_processing
 
@@ -93,7 +99,7 @@ class Robot:
         return cls(left_motor, right_motor, audio, visual_proc, distance_sensor, camera)
 
     @classmethod
-    def dummy_config(cls, dummy_image, yolo_model):
+    def dummy_config(cls, dummy_image, yolo_model, webcam=False):
         right_motor = Dummy_motor("right")
         left_motor = Dummy_motor("left")
 
@@ -103,7 +109,10 @@ class Robot:
 
         visual_proc = Visual_processing(yolo_model)
 
-        camera = Dummy_camera(dummy_image)
+        if webcam:
+            camera = Webcam()
+        else:
+            camera = Dummy_camera(dummy_image)
 
         return cls(left_motor, right_motor, audio, visual_proc, distance_sensor, camera)
 

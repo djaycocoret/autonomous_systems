@@ -23,9 +23,11 @@ class Brain:
         return cls(robot)
 
     @classmethod
-    def dummy_config(cls):
+    def dummy_config(cls, webcam):
         robot = Robot.dummy_config(
-            dummy_image="files/test images/cat.jpg", yolo_model="yolo26n.pt"
+            dummy_image="files/test images/cat.jpg",
+            yolo_model="yolo26n.pt",
+            webcam=webcam,
         )
         return cls(robot)
 
@@ -77,13 +79,13 @@ class Brain:
                 self.last_state_change = time()
 
 
-# brain = Brain.from_config("gpio_settings.json")
-brain = Brain.dummy_config()
+if __name__ == "__main__":
+    # brain = Brain.from_config("gpio_settings.json")
+    brain = Brain.dummy_config()
 
+    try:
+        while True:
+            brain.update()
 
-try:
-    while True:
-        brain.update()
-
-except KeyboardInterrupt:
-    brain.stop()
+    except KeyboardInterrupt:
+        brain.stop()
