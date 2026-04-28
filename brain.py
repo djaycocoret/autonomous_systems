@@ -1,6 +1,8 @@
 from enum import Enum, auto
 from time import time
 
+import pandas as pd
+
 from robot import Robot
 
 
@@ -16,6 +18,8 @@ class Brain:
         self.robot = robot
         self.state = State.IDLE
         self.last_state_change = time()
+
+        self.offset = 0
 
     @classmethod
     def from_config(cls, config_path):
@@ -36,15 +40,17 @@ class Brain:
 
     def update(self, verbose=False):
         frame = self.robot.capture_image()
-        offset, found = self.robot.locate_cat(frame)
+        df = self.robot.perceive(frame)
         safe = self.robot.can_move_fwd()
 
-        self._state_logic(offset, found, safe)
+        self._state_logic(df, safe)
         if verbose:
             print(f"Current State: {self.state}")
-        self.execute_behaviour(offset)
 
-    def _state_logic(self, offset, found, safe):
+        self.execute_behaviour(self.offset)
+
+    def _state_logic(self, df, safe):
+        found = self.class_in_frame(df, "cat")
         if not safe:
             self.state = State.BLOCKED
             return
@@ -69,7 +75,7 @@ class Brain:
             self.robot.spin("R", duration=0.1)
 
         elif self.state == State.CHASING:
-            self.robot.chase(offset)
+            self.robot.chase(self.offset)
 
         if self.state == State.BLOCKED:
             self.robot.stop()
@@ -77,10 +83,19 @@ class Brain:
                 self.robot.growl()
                 self.last_state_change = time()
 
+    def class_in_frame(self, df, class_: str):
+        return df["class"].str.contains(class_).any()
+
+    def class_offset(self, df, class_: str):
+        if self.class_in_frame(df, class_):
+            return df[df["class"] == class_][0]
+        else:
+            return 0
+
 
 if __name__ == "__main__":
     # brain = Brain.from_config("gpio_settings.json")
-    brain = Brain.dummy_config(True)
+    brain = Brain.dummy_config(webcam=False)
 
     try:
         while True:

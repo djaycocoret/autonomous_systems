@@ -257,6 +257,11 @@ class Robot:
 
         return offset, found
 
+    def perceive(self, frame, conf_threshold=0.8):
+        df = self.visual_proc.perceive(frame)
+        df_threshold = df[df["confidence"] >= conf_threshold]
+        return df_threshold
+
     def capture_image(self):
         """Method to capture image from the camera
 

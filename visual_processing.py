@@ -1,3 +1,4 @@
+import pandas as pd
 from ultralytics import YOLO
 
 
@@ -18,7 +19,7 @@ class Visual_processing:
         self.confidence_threshold = confidence_threshold
 
     def locate_cat(self, input) -> tuple[float, bool]:
-        """Locates a cat, if found, returns a scaled value how off centre the target is.
+        """[LEGACY FUNCTION] Locates a cat, if found, returns a scaled value how off centre the target is.
 
         Parameters
         __________
@@ -49,3 +50,44 @@ class Visual_processing:
                     offset = float((x - w_img / 2) / w_img)
                     return offset, True
         return 0, False
+
+    def perceive(self, input):
+        """Runs YOLO and outputs dataframe of found classes.
+
+        Parameters
+        __________
+        input : np.array
+            The captured image as a numpy array
+
+        Returns
+        _______
+        offset : tuple[float, bool]
+            idk how to describe it yet.
+            0 can be 0 offset of nothing in image
+            Also return the boolean value which states if it has found something
+        """
+
+        h_img, w_img, _ = input.shape
+
+        results = self.model.predict(input)
+
+        frame = list()
+
+        for result in results:
+            boxes = result.boxes
+            for box in boxes:
+                row = dict()
+                cls_id = int(box.cls[0])
+                cls = result.names[cls_id]
+                x, y, _, _ = box.xywh[0]
+                row["class"] = result.names[cls_id]
+                row["confidence"] = box.conf[0]
+                row["x"], row["y"] = x, y
+                row["offset"] = float((x - w_img / 2) / w_img)
+
+                frame.append(row)
+
+                if box.conf[0] >= self.confidence_threshold:
+                    print(f"{cls} at ({x}, {y}), with confidence {box.conf[0]}")
+
+        return pd.DataFrame(frame)
