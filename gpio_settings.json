@@ -7,7 +7,7 @@
     "enable_pin_left": 13,
     "distance_trigger_pin": 5,
     "distance_echo_pin": 6,
-    "growl_dir": "/home/group3/autonomous_systems/files/audio/growls",
-    "bark_dir": "/home/group3/autonomous_systems/files/audio/barks",
+    "growl_dir": "./files/audio/growls",
+    "bark_dir": "./files/audio/barks",
     "yolo_model": "yolo26n.pt"
 }

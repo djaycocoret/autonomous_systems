@@ -8,6 +8,7 @@ class State(Enum):
     IDLE = auto()
     SEARCHING = auto()
     CHASING = auto()
+    BARKING = auto()
     BLOCKED = auto()
 
 
@@ -23,11 +24,18 @@ class Brain:
         return cls(robot)
 
     @classmethod
-    def dummy_config(cls, webcam):
+    def dummy_config(
+        cls,
+        dummy_img="files/test images/cat.jpg",
+        webcam=False,
+        yolo="yolo26n.pt",
+        distance=0.2,
+    ):
         robot = Robot.dummy_config(
-            dummy_image="files/test images/cat.jpg",
+            dummy_image=dummy_img,
             yolo_model="yolo26n.pt",
             webcam=webcam,
+            distance=0.1,
         )
         return cls(robot)
 
@@ -48,6 +56,9 @@ class Brain:
         if not safe:
             self.state = State.BLOCKED
             return
+
+        if self.state == State.BLOCKED and found:
+            self.state = State.BARKING
 
         if self.state == State.BLOCKED and safe:
             self.state = State.IDLE
@@ -70,6 +81,9 @@ class Brain:
 
         elif self.state == State.CHASING:
             self.robot.chase(offset)
+
+        elif self.state == State.BARKING:
+            self.robot.bark()
 
         if self.state == State.BLOCKED:
             self.robot.stop()

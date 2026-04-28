@@ -32,6 +32,10 @@ class Robot:
         The minimum distance between the robot and the object detected by the distance sensor
     verbose : bool
         True if you want stuff printed in the console
+    scalar_left: float
+        a scalar used to scale the max of the left wheel
+    scalar_right: float
+        a scalar used to scale the max of the right wheel
     """
 
     def __init__(
@@ -72,6 +76,9 @@ class Robot:
 
         self.safety_distance = 0.2
         self.verbose = verbose
+
+        self.scalar_left = 1
+        self.scalar_right = 1
 
     @classmethod
     def from_config(cls, json_path):
@@ -117,7 +124,7 @@ class Robot:
         return cls(left_motor, right_motor, audio, visual_proc, distance_sensor, camera)
 
     @classmethod
-    def dummy_config(cls, dummy_image, yolo_model, webcam=False):
+    def dummy_config(cls, dummy_image, yolo_model, webcam=False, distance=0.5):
         """Initialises the robot with dummy hardware abilities, giving one the capacity to run on device other than raspberry pi.
 
         Parameters
@@ -133,7 +140,7 @@ class Robot:
         right_motor = Dummy_motor("right")
         left_motor = Dummy_motor("left")
 
-        distance_sensor = Dummy_distance_sensor(0.6)
+        distance_sensor = Dummy_distance_sensor(distance)
 
         audio = Dummy_audio()
 
@@ -289,14 +296,12 @@ class Robot:
             the offset from center [-0.5, 0.5]
         """
 
-        value_left, value_right = 1, 1  # will be used for smoothing
-
         if offset > 0:
-            self.left_motor.forward(value_left)
-            self.right_motor.forward(value_right - offset)
+            self.left_motor.forward(1 * self.scalar_left)
+            self.right_motor.forward((1 - offset) * self.scalar_right)
         else:
-            self.left_motor.forward(value_left - offset)
-            self.right_motor.forward(value_right)
+            self.left_motor.forward((1 + offset) * self.scalar_left)
+            self.right_motor.forward(1 * self.scalar_right)
 
     ######
 
@@ -321,28 +326,28 @@ class Robot:
         end = start + duration
         while time.time() < end:
             ratio = (start + time.time()) / duration
-            self.left_motor.forward(speed=max * ratio)
+            self.left_motor.forward(speed=max_speed * ratio)
 
     def turning_forward_right(self, duration, min_speed=0, max_speed=1):
         start = time.time()
         end = start + duration
         while time.time() < end:
             ratio = (start + time.time()) / duration
-            self.right_motor.forward(speed=max * ratio)
+            self.right_motor.forward(speed=max_speed * ratio)
 
     def turning_backwards_left(self, duration, min_speed=0, max_speed=1):
         start = time.time()
         end = start + duration
         while time.time() < end:
             ratio = (start + time.time()) / duration
-            self.left_motor.backward(speed=max * ratio)
+            self.left_motor.backward(speed=max_speed * ratio)
 
     def turning_backwards_right(self, duration, min_speed=0, max_speed=1):
         start = time.time()
         end = start + duration
         while time.time() < end:
             ratio = (start + time.time()) / duration
-            self.right_motor.backward(speed=max * ratio)
+            self.right_motor.backward(speed=max_speed * ratio)
 
 
 if __name__ == "__main__":

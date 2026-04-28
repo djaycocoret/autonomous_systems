@@ -2,17 +2,27 @@ import cv2
 
 
 class Dummy_motor:
+    """A class representing a motor, which does not require hardware
+
+    The class prints updates by printing commands to the console.
+    This class uses the same structure as the other motor class.
+
+    Parameters
+    __________
+    name: str
+        the name of the motor (e.g., right_wheel)"""
+
     def __init__(self, name):
         self.name = name
 
     def forward(self, speed=1):
-        print(f"{self.name} Motor: going forward. Speed: {speed}")
+        print(f"{self.name} Motor speed: {speed}")
 
     def stop(self):
         print(f"{self.name} Motor: stopped")
 
     def backward(self, speed=1):
-        print(f"{self.name} Motor: going backward. Speed: {speed}")
+        print(f"{self.name} Motor speed: {-speed}")
 
 
 class Dummy_distance_sensor:
@@ -20,7 +30,7 @@ class Dummy_distance_sensor:
         self.distance = distance
 
     def safe_distance(self, safe_distance):
-        print(f"simulated distance: {self.distance}")
+        print(f"simulated distance: {self.distance}, {self.distance > safe_distance}")
         return self.distance > safe_distance
 
 
@@ -71,5 +81,4 @@ class Webcam:
         return frame
 
     def stop(self):
-        # Release the hardware resource
         self.cam.release()
