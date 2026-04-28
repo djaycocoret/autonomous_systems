@@ -28,3 +28,8 @@ def get_wav_files(directory_path):
     path = Path(directory_path)
     wav_files = [str(file) for file in path.glob("*.wav")]
     return wav_files
+
+
+if __name__ == "__main__":
+    for _ in range(10):
+        play_wav("files/audio/growls/KSHMR_Animals_13_Dog_Growl.wav")
