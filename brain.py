@@ -1,9 +1,11 @@
+import json
 import random
 from enum import Enum, auto
 from time import time
 
 import pandas as pd
 
+from helper_functions import softmax
 from robot import Robot
 
 
@@ -27,18 +29,25 @@ class Wander_state(Enum):
 
 
 class Brain:
-    def __init__(self, robot):
+    def __init__(self, robot, learning_rate):
         self.robot = robot
         self.state = State.IDLE
         self.wander_state = Wander_state.START
+        self.wander_state_probs = [random.random() for _ in range(1, len(Wander_state))]
         self.last_state_change = time()
+        self.learning_rate = learning_rate
+        self.state_duration_change = 2
 
         self.offset = 0
 
     @classmethod
     def from_config(cls, config_path):
         robot = Robot.from_config(config_path)
-        return cls(robot)
+
+        with open(config_path, "r") as file:
+            config = json.load(file)
+        learning_rate = config["learning_rate"]
+        return cls(robot, learning_rate)
 
     @classmethod
     def dummy_config(
@@ -47,14 +56,15 @@ class Brain:
         webcam=False,
         yolo="yolo26n.pt",
         distance=0.2,
+        learning_rate=0.05,
     ):
         robot = Robot.dummy_config(
             dummy_image=dummy_img,
-            yolo_model="yolo26n.pt",
+            yolo_model=yolo,
             webcam=webcam,
-            distance=0.1,
+            distance=distance,
         )
-        return cls(robot)
+        return cls(robot, learning_rate)
 
     def stop(self):
         self.robot.stop(stop_cam=True)
@@ -67,6 +77,7 @@ class Brain:
         self._state_logic(df, safe)
         if verbose:
             print(f"Current State: {self.state}")
+            print(f"pdf: {softmax(self.wander_state_probs)}")
 
         self.execute_behaviour(self.offset)
 
@@ -85,6 +96,13 @@ class Brain:
         elif self.state == State.IDLE and not found:
             self.state = State.SEARCHING
 
+        elif self.state == State.SEARCHING and found:
+            wander_states = list(Wander_state)
+            state_in_which_found = (
+                wander_states.index(self.wander_state) - 1
+            )  # exclude start state
+            self.wander_state_probs[state_in_which_found] += self.learning_rate
+
         elif found:
             self.state = State.CHASING
 
@@ -99,10 +117,9 @@ class Brain:
             self.last_state_change = time()
             self.robot.chase(self.offset)
 
-<<<<<<< HEAD
         elif self.state == State.BARKING:
             self.robot.bark()
-=======
+
         elif self.state == State.LOST_TARGET:
             left_speed, right_speed = self.robot.return_motor_speeds()
             left_speed = left_speed - 0.05
@@ -112,10 +129,12 @@ class Brain:
         elif self.state == State.SEARCHING:
             if (
                 self.wander_state == Wander_state.START
-                or time() - self.last_state_change > 2
+                or time() - self.last_state_change > self.state_duration_change
             ):
                 possible_states = list(Wander_state)[1:]  # excludes start state
-                self.wander_state = random.choice(possible_states)
+                self.wander_state = random.choices(
+                    possible_states, weights=softmax(self.wander_state_probs)
+                )[0]
                 self.last_state_change = time()
 
             if self.wander_state == Wander_state.TURN_LEFT:
@@ -127,16 +146,15 @@ class Brain:
             elif self.wander_state == Wander_state.BACKWARD:
                 self.robot.backward(0.4)
             elif self.wander_state == Wander_state.SPIN:
-                left = int(bool(random.random() > 0.5))
-                direction = ["L", "R"][left]
+                right = int(random.random() > 0.5)
+                direction = ["L", "R"][right]
                 self.robot.spin(direction, 0.4)
             elif self.wander_state == Wander_state.STOP:
                 self.robot.stop()
->>>>>>> 318919d7cfe341a63b847a218bd5fc52dbd15b8b
 
-        if self.state == State.BLOCKED:
+        elif self.state == State.BLOCKED:
             self.robot.stop()
-            if time() - self.last_state_change > 2:
+            if time() - self.last_state_change > self.state_duration_change:
                 self.robot.growl()
                 self.last_state_change = time()
 
@@ -145,7 +163,7 @@ class Brain:
 
     def class_offset(self, df, class_: str):
         if self.class_in_frame(df, class_):
-            return df[df["class"] == class_][0]
+            return df[df["class"] == class_].iloc[0]
         else:
             return 0
 

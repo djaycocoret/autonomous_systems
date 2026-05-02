@@ -1,6 +1,14 @@
 import subprocess
 from pathlib import Path
 
+import numpy as np
+
+
+def softmax(scores):
+    x = np.array(scores)
+    e_x = np.exp(x - np.max(x))
+    return (e_x.e_x.sum()).tolist()
+
 
 def check_speed(speed):
     """A function that return a value between 0 and 1, which has predictable behaviour for the motor class
