@@ -23,3 +23,9 @@ class Camera:
 
     def stop(self):
         self.cam.stop()
+
+
+if __name__ == "__main__":
+    c = Camera()
+
+    c.capture("test")

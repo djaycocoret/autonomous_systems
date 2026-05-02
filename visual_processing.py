@@ -18,39 +18,6 @@ class Visual_processing:
         self.model = YOLO(model)
         self.confidence_threshold = confidence_threshold
 
-    def locate_cat(self, input) -> tuple[float, bool]:
-        """[LEGACY FUNCTION] Locates a cat, if found, returns a scaled value how off centre the target is.
-
-        Parameters
-        __________
-        input : np.array
-            The captured image as a numpy array
-
-        Returns
-        _______
-        offset : tuple[float, bool]
-            idk how to describe it yet.
-            0 can be 0 offset of nothing in image
-            Also return the boolean value which states if it has found something
-        """
-
-        h_img, w_img, _ = input.shape
-
-        results = self.model.predict(input)
-
-        for result in results:
-            boxes = result.boxes
-            for box in boxes:
-                cls_id = int(box.cls[0])
-                cls = result.names[cls_id]
-                x, y, _, _ = box.xywh[0]
-                if box.conf[0] >= self.confidence_threshold:
-                    print(f"{cls} at ({x}, {y}), with confidence {box.conf[0]}")
-                if cls == "cat" and box.conf[0] >= self.confidence_threshold:
-                    offset = float((x - w_img / 2) / w_img)
-                    return offset, True
-        return 0, False
-
     def perceive(self, input):
         """Runs YOLO and outputs dataframe of found classes.
 
@@ -81,8 +48,8 @@ class Visual_processing:
                 cls = result.names[cls_id]
                 x, y, _, _ = box.xywh[0]
                 row["class"] = result.names[cls_id]
-                row["confidence"] = box.conf[0]
-                row["x"], row["y"] = x, y
+                row["confidence"] = float(box.conf[0])
+                row["x"], row["y"] = float(x), float(y)
                 row["offset"] = float((x - w_img / 2) / w_img)
 
                 frame.append(row)
@@ -90,4 +57,6 @@ class Visual_processing:
                 if box.conf[0] >= self.confidence_threshold:
                     print(f"{cls} at ({x}, {y}), with confidence {box.conf[0]}")
 
-        return pd.DataFrame(frame)
+        df = pd.DataFrame(frame, columns=["class", "confidence", "x", "y", "offset"])
+
+        return df
