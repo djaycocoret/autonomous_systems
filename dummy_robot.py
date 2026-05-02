@@ -14,14 +14,17 @@ class Dummy_motor:
 
     def __init__(self, name):
         self.name = name
+        self.speed = 0
 
     def forward(self, speed=1):
+        self.speed = speed
         print(f"{self.name} Motor speed: {speed}")
 
     def stop(self):
         print(f"{self.name} Motor: stopped")
 
     def backward(self, speed=1):
+        self.speed = speed
         print(f"{self.name} Motor speed: {-speed}")
 
 

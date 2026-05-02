@@ -1,3 +1,4 @@
+import random
 from enum import Enum, auto
 from time import time
 
@@ -12,12 +13,24 @@ class State(Enum):
     CHASING = auto()
     BARKING = auto()
     BLOCKED = auto()
+    LOST_TARGET = auto()
+
+
+class Wander_state(Enum):
+    START = auto()
+    TURN_LEFT = auto()
+    TURN_RIGHT = auto()
+    FORWARD = auto()
+    BACKWARD = auto()
+    SPIN = auto()
+    STOP = auto()
 
 
 class Brain:
     def __init__(self, robot):
         self.robot = robot
         self.state = State.IDLE
+        self.wander_state = Wander_state.START
         self.last_state_change = time()
 
         self.offset = 0
@@ -82,14 +95,44 @@ class Brain:
         if self.state == State.IDLE:
             self.robot.stop()
 
-        elif self.state == State.SEARCHING:
-            self.robot.spin("R", duration=0.1)
-
         elif self.state == State.CHASING:
+            self.last_state_change = time()
             self.robot.chase(self.offset)
 
+<<<<<<< HEAD
         elif self.state == State.BARKING:
             self.robot.bark()
+=======
+        elif self.state == State.LOST_TARGET:
+            left_speed, right_speed = self.robot.return_motor_speeds()
+            left_speed = left_speed - 0.05
+            right_speed = right_speed - 0.05
+            self.robot.forward([left_speed, right_speed])
+
+        elif self.state == State.SEARCHING:
+            if (
+                self.wander_state == Wander_state.START
+                or time() - self.last_state_change > 2
+            ):
+                possible_states = list(Wander_state)[1:]  # excludes start state
+                self.wander_state = random.choice(possible_states)
+                self.last_state_change = time()
+
+            if self.wander_state == Wander_state.TURN_LEFT:
+                self.robot.turn("L", 0.4)
+            elif self.wander_state == Wander_state.TURN_RIGHT:
+                self.robot.turn("R", 0.4)
+            elif self.wander_state == Wander_state.FORWARD:
+                self.robot.forward(0.4)
+            elif self.wander_state == Wander_state.BACKWARD:
+                self.robot.backward(0.4)
+            elif self.wander_state == Wander_state.SPIN:
+                left = int(bool(random.random() > 0.5))
+                direction = ["L", "R"][left]
+                self.robot.spin(direction, 0.4)
+            elif self.wander_state == Wander_state.STOP:
+                self.robot.stop()
+>>>>>>> 318919d7cfe341a63b847a218bd5fc52dbd15b8b
 
         if self.state == State.BLOCKED:
             self.robot.stop()
@@ -108,8 +151,8 @@ class Brain:
 
 
 if __name__ == "__main__":
-    # brain = Brain.from_config("gpio_settings.json")
-    brain = Brain.dummy_config(webcam=False)
+    brain = Brain.from_config("gpio_settings.json")
+    # brain = Brain.dummy_config(webcam=False)
 
     try:
         while True:

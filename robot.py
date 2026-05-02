@@ -74,7 +74,7 @@ class Robot:
         self.distance_sensor = distance_sensor
         self.camera = camera
 
-        self.safety_distance = 0.2
+        self.safety_distance = 0.3
         self.verbose = verbose
 
         self.scalar_left = 1
@@ -167,15 +167,21 @@ class Robot:
         """Return the wheels of the robot in a list"""
         return [self.left_motor, self.right_motor]
 
-    def forward(self, speed=1):
+    def return_motor_speeds(self) -> tuple:
+        return tuple(motor.speed for motor in self.return_motors())
+
+    def forward(self, speed=[1.0, 1.0]):
         """Changes the state of the robot to going forward
 
         Parameters
         __________
-        speed : float [0, 1]
+        speed : float [0, 1] or list[float]
             The speed at which the agent will go forward"""
-        for motor in self.return_motors():
-            motor.forward(speed)
+        if isinstance(speed, float):  # support for when you do only one number
+            speed = [speed for _ in range(len(self.return_motors()))]
+
+        for i, motor in enumerate(self.return_motors()):
+            motor.forward(speed[i])
 
     def stop(self, stop_cam=False):
         """Changes the state of the robot to stopped"""
@@ -195,42 +201,32 @@ class Robot:
         for motor in self.return_motors():
             motor.backward(speed)
 
-    def turn_left(self, speed=1, duration=0.5):
-        """Makes the robot turn left for a specified duration
+    def turn(self, direction: str, speed=1.0):
+        if direction.upper() == "L":
+            self.left_motor.forward(speed)
+            self.right_motor.backward(speed)
+        elif direction.upper() == "R":
+            self.right_motor.forward(speed)
+            self.left_motor.backward(speed)
+        else:
+            raise ValueError("Direction must be either left or right")
 
-        Parameters
-        __________
-        speed : float [0, 1]
-            The speed at which the robot will turn
-        duration : float
-            The duration of the turn movement in seconds
-        """
-        self.left_motor.forward()
-        self.right_motor.stop()
-        sleep(duration)
-        self.stop()
-
-    def spin(self, direction, duration=0.5):
-        """Makes the robot spin for a specified duration
+    def spin(self, direction, speed):
+        """Makes the robot spin
 
         Parameters
         __________
         direction : str ('L', 'R')
             The direction how the robot will spin
-        duration : float
-            The duration of the spin movement in seconds
+        speed : float
+            The speed of the motors
         """
         if direction.upper() == "L":
-            self.left_motor.forward()
-            self.right_motor.backward()
-            sleep(duration)
-            self.stop()
+            self.left_motor.forward(speed)
+            self.right_motor.backward(speed)
         elif direction.upper() == "R":
-            self.right_motor.forward()
-            self.left_motor.backward()
-            print("spinning")
-            sleep(duration)
-            self.stop()
+            self.right_motor.forward(speed)
+            self.left_motor.backward(speed)
         else:
             raise ValueError("Direction must be either left or right")
 
@@ -241,28 +237,6 @@ class Robot:
     def growl(self):
         """Plays a randomly selected growl sample"""
         self.audio.growl()
-
-    def locate_cat(self, frame):
-        """Method that locates cat and if found returns offset from center.
-
-        Parameters
-        __________
-        frame: NDarray
-            The image in which a cat has to be located
-
-        Returns
-        _______
-        offset: float
-            a scaled value [-0.5, 0.5] that signals how off center the cat is.
-        found: bool
-            True if a cat is found; False if no cat is found.
-        """
-        offset, found = self.visual_proc.locate_cat(frame)
-
-        if self.verbose:
-            print(f"offset: {offset}")
-
-        return offset, found
 
     def perceive(self, frame, conf_threshold=0.8):
         df = self.visual_proc.perceive(frame)
@@ -308,59 +282,13 @@ class Robot:
             self.left_motor.forward((1 + offset) * self.scalar_left)
             self.right_motor.forward(1 * self.scalar_right)
 
-    ######
-
-    def slowing_down(self, duration, min_speed=0, max_speed=1):
-        start = time.time()
-        end = start + duration
-        while time.time() < end:
-            ratio = (end - time.time()) / duration
-            for motor in self.return_motors():
-                motor.forward(speed=max_speed * ratio)
-
-    def speeding_up(self, duration, min_speed=0, max_speed=1):
-        start = time.time()
-        end = start + duration
-        while time.time() < end:
-            ratio = (start + time.time()) / duration
-            for motor in self.return_motors():
-                motor.forward(speed=max_speed * ratio)
-
-    def turning_forward_left(self, duration, min_speed=0, max_speed=1):
-        start = time.time()
-        end = start + duration
-        while time.time() < end:
-            ratio = (start + time.time()) / duration
-            self.left_motor.forward(speed=max_speed * ratio)
-
-    def turning_forward_right(self, duration, min_speed=0, max_speed=1):
-        start = time.time()
-        end = start + duration
-        while time.time() < end:
-            ratio = (start + time.time()) / duration
-            self.right_motor.forward(speed=max_speed * ratio)
-
-    def turning_backwards_left(self, duration, min_speed=0, max_speed=1):
-        start = time.time()
-        end = start + duration
-        while time.time() < end:
-            ratio = (start + time.time()) / duration
-            self.left_motor.backward(speed=max_speed * ratio)
-
-    def turning_backwards_right(self, duration, min_speed=0, max_speed=1):
-        start = time.time()
-        end = start + duration
-        while time.time() < end:
-            ratio = (start + time.time()) / duration
-            self.right_motor.backward(speed=max_speed * ratio)
-
 
 if __name__ == "__main__":
     print("this contains only class definitions. to run the robot run something else")
 
-    bitch = Robot.dummy_config(
+    bot = Robot.dummy_config(
         dummy_image="/home/group3/autonomous_systems/files/test images/cat.jpg",
         yolo_model="/home/group3/autonomous_systems/yolo26n.pt",
     )
 
-    bitch.forward()
+    bot.forward()
