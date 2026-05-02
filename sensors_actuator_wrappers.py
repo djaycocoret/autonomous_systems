@@ -51,6 +51,7 @@ class Distance_sensor:
         self.sensor = DistanceSensor(trigger_pin, echo_pin)
 
     def safe_distance(self, safe_distance: float):
+        print(self.sensor.distance)
         return self.sensor.distance > safe_distance
 
 
@@ -80,10 +81,13 @@ class Motor:
             The pin connected to the forward connection on the L293D chip
         backward_pin : int
             The pin connected to the backward connection on the L293D chip
+        speed : float
+            current speed
         """
         self.PWM = PWMOutputDevice(pwm_pin)
         self.forward_pin = DigitalOutputDevice(forward_pin)
         self.backward_pin = DigitalOutputDevice(backward_pin)
+        self.speed = 0
 
     def __repr__(self):
         return f"Motor object: forward pin: {self.forward_pin}, backward pin: {self.backward_pin}, PWM: {self.PWM}, speed: {self.PWM.value}"
@@ -96,12 +100,14 @@ class Motor:
         speed : float [0, 1]
             The speed at which the motor moves
         """
-        self.PWM.value = check_speed(speed)
+        self.speed = check_speed(speed)
+        self.PWM.value = self.speed
         self.backward_pin.off()
         self.forward_pin.on()
 
     def stop(self):
         """Makes the motor stop"""
+        self.speed = 0
         self.backward_pin.off()
         self.forward_pin.off()
 
@@ -113,6 +119,7 @@ class Motor:
         speed : float [0, 1]
             The speed at which the motor moves
         """
-        self.PWM.value = check_speed(speed)
+        self.speed = check_speed(speed)
+        self.PWM.value = self.speed
         self.forward_pin.off()
         self.backward_pin.on()
