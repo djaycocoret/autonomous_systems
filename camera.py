@@ -11,6 +11,10 @@ class Camera:
         self.cam.configure(config)
         self.cam.start()
 
+        self.cam.set_controls(
+            {"ExposureTime": 2000, "AnalogueGain": 20.0, "AeEnable": False}
+        )
+
     def capture(self, file_name=None):
         frame = self.cam.capture_array()
 

@@ -1,3 +1,4 @@
+import cv2
 import pandas as pd
 from ultralytics import YOLO
 
@@ -60,3 +61,9 @@ class Visual_processing:
         df = pd.DataFrame(frame, columns=["class", "confidence", "x", "y", "offset"])
 
         return df
+
+
+if __name__ == "__main__":
+    img = cv2.imread("test.jpg")
+    see = Visual_processing("yolo26n.pt")
+    print(see.perceive(img))

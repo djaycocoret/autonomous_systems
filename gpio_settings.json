@@ -11,5 +11,5 @@
     "bark_dir": "./files/audio/barks",
     "yolo_model": "yolo26n.pt",
     "learning_rate": 0.05,
-    "confidence_threshold": 0.5
+    "confidence_threshold": 0.3
 }

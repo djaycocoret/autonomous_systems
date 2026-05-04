@@ -77,7 +77,7 @@ class Robot:
         self.safety_distance = 0.3
         self.verbose = verbose
 
-        self.scalar_left = 1
+        self.scalar_left = 0.85
         self.scalar_right = 1
 
     @classmethod
@@ -173,6 +173,9 @@ class Robot:
     def return_motor_speeds(self) -> tuple:
         return tuple(motor.speed for motor in self.return_motors())
 
+    def return_motor_scalars(self):
+        return [self.scalar_left, self.scalar_right]
+
     def forward(self, speed=[1.0, 1.0]):
         """Changes the state of the robot to going forward
 
@@ -184,7 +187,7 @@ class Robot:
             speed = [speed for _ in range(len(self.return_motors()))]
 
         for i, motor in enumerate(self.return_motors()):
-            motor.forward(speed[i])
+            motor.forward(speed[i] * self.return_motor_scalars()[i])
 
     def stop(self, stop_cam=False):
         """Changes the state of the robot to stopped"""
@@ -201,15 +204,15 @@ class Robot:
         __________
         speed : float [0 , 1]
             The speed at which the agent will go backward"""
-        for motor in self.return_motors():
-            motor.backward(speed)
+        for motor, scalar in zip(self.return_motors(), self.return_motor_scalars()):
+            motor.backward(speed * scalar)
 
     def turn(self, direction: str, speed=1.0):
         if direction.upper() == "R":
-            self.left_motor.forward(speed)
+            self.left_motor.forward(speed * self.return_motor_scalars()[0])
             self.right_motor.stop()
         elif direction.upper() == "L":
-            self.right_motor.forward(speed)
+            self.right_motor.forward(speed * self.return_motor_scalars()[1])
             self.left_motor.stop()
         else:
             raise ValueError("Direction must be either left or right")
@@ -225,11 +228,11 @@ class Robot:
             The speed of the motors
         """
         if direction.upper() == "R":
-            self.left_motor.forward(speed)
-            self.right_motor.backward(speed)
+            self.left_motor.forward(speed * self.return_motor_scalars()[0])
+            self.right_motor.backward(speed * self.return_motor_scalars()[1])
         elif direction.upper() == "L":
-            self.right_motor.forward(speed)
-            self.left_motor.backward(speed)
+            self.right_motor.forward(speed * self.return_motor_scalars()[1])
+            self.left_motor.backward(speed * self.return_motor_scalars()[0])
         else:
             raise ValueError("Direction must be either left ('L') or right ('R')")
 
@@ -280,20 +283,19 @@ class Robot:
 
         print(offset)
 
-        if offset > 0:
-            self.left_motor.forward(1 * self.scalar_left)
-            self.right_motor.forward((1 - offset) * self.scalar_right)
+        if offset < 0:
+            self.left_motor.forward(1 * self.return_motor_scalars()[0])
+            self.right_motor.forward((1 - offset) * self.return_motor_scalars()[1])
         else:
-            self.left_motor.forward((1 + offset) * self.scalar_left)
-            self.right_motor.forward(1 * self.scalar_right)
+            self.left_motor.forward((1 + offset) * self.return_motor_scalars()[0])
+            self.right_motor.forward(1 * self.return_motor_scalars()[1])
 
 
 if __name__ == "__main__":
-    print("this contains only class definitions. to run the robot run something else")
+    bot = Robot.from_config("gpio_settings.json")
 
-    bot = Robot.dummy_config(
-        dummy_image="/home/group3/autonomous_systems/files/test images/cat.jpg",
-        yolo_model="/home/group3/autonomous_systems/yolo26n.pt",
-    )
-
-    bot.forward()
+    try:
+        while True:
+            bot.forward()
+    except:
+        bot.stop(True)
