@@ -117,7 +117,10 @@ class Robot:
         growls = get_wav_files(gpio_settings["growl_dir"])
         audio = Audio_processing(barks, growls)
 
-        visual_proc = Visual_processing(gpio_settings["yolo_model"])
+        confidence_threshold = gpio_settings["confidence_threshold"]
+        visual_proc = Visual_processing(
+            gpio_settings["yolo_model"], confidence_threshold
+        )
 
         camera = Camera()
 
@@ -202,12 +205,12 @@ class Robot:
             motor.backward(speed)
 
     def turn(self, direction: str, speed=1.0):
-        if direction.upper() == "L":
+        if direction.upper() == "R":
             self.left_motor.forward(speed)
-            self.right_motor.backward(speed)
-        elif direction.upper() == "R":
+            self.right_motor.stop()
+        elif direction.upper() == "L":
             self.right_motor.forward(speed)
-            self.left_motor.backward(speed)
+            self.left_motor.stop()
         else:
             raise ValueError("Direction must be either left or right")
 
@@ -221,14 +224,14 @@ class Robot:
         speed : float
             The speed of the motors
         """
-        if direction.upper() == "L":
+        if direction.upper() == "R":
             self.left_motor.forward(speed)
             self.right_motor.backward(speed)
-        elif direction.upper() == "R":
+        elif direction.upper() == "L":
             self.right_motor.forward(speed)
             self.left_motor.backward(speed)
         else:
-            raise ValueError("Direction must be either left or right")
+            raise ValueError("Direction must be either left ('L') or right ('R')")
 
     def bark(self):
         """Plays a randomly selected bark sample"""
@@ -274,6 +277,8 @@ class Robot:
         offset : float
             the offset from center [-0.5, 0.5]
         """
+
+        print(offset)
 
         if offset > 0:
             self.left_motor.forward(1 * self.scalar_left)
