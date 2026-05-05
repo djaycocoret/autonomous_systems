@@ -167,22 +167,44 @@ class Robot:
         )
 
     def return_motors(self) -> list:
-        """Return the wheels of the robot in a list"""
+        """
+        Return the wheels of the robot in a list
+        """
         return [self.left_motor, self.right_motor]
 
     def return_motor_speeds(self) -> tuple:
+        """
+        Returns a tuple of the motor speeds
+
+        Returns
+        _______
+        speeds : tuple[float]
+            The tuple of speeds
+        """
         return tuple(motor.speed for motor in self.return_motors())
 
     def return_motor_scalars(self):
-        return [self.scalar_left, self.scalar_right]
+        """
+        Returns a list of the scalars by which the speed of the motors is scaled by
+
+        Returns
+        _______
+        scalars = list[float]
+            The list of scalars.
+        """
+
+        scalar = [self.scalar_left, self.scalar_right]
+        return scalar
 
     def forward(self, speed=[1.0, 1.0]):
-        """Changes the state of the robot to going forward
+        """
+        Changes the state of the robot to going forward
 
         Parameters
         __________
         speed : float [0, 1] or list[float]
-            The speed at which the agent will go forward"""
+            The speed at which the agent will go forward
+        """
         if isinstance(speed, float):  # support for when you do only one number
             speed = [speed for _ in range(len(self.return_motors()))]
 
@@ -190,7 +212,9 @@ class Robot:
             motor.forward(speed[i] * self.return_motor_scalars()[i])
 
     def stop(self, stop_cam=False):
-        """Changes the state of the robot to stopped"""
+        """
+        Changes the state of the robot to stopped
+        """
         for motor in self.return_motors():
             motor.stop()
 
@@ -198,16 +222,30 @@ class Robot:
             self.camera.stop()
 
     def backward(self, speed=1):
-        """Changes the state of the robot to going backward
+        """
+        Changes the state of the robot to going backward
 
         Parameters
         __________
         speed : float [0 , 1]
-            The speed at which the agent will go backward"""
+            The speed at which the agent will go backward
+        """
         for motor, scalar in zip(self.return_motors(), self.return_motor_scalars()):
             motor.backward(speed * scalar)
 
     def turn(self, direction: str, speed=1.0):
+        """
+        Makes the robot turn
+
+        Stops one wheel, while making the other go forward.
+
+        Parameters
+        __________
+        direction : str ('L', 'R')
+            The direction how the robot will spin
+        speed : float
+            The speed of the motors
+        """
         if direction.upper() == "R":
             self.left_motor.forward(speed * self.return_motor_scalars()[0])
             self.right_motor.stop()
@@ -218,7 +256,10 @@ class Robot:
             raise ValueError("Direction must be either left or right")
 
     def spin(self, direction, speed):
-        """Makes the robot spin
+        """
+        Makes the robot spin
+
+        Makes wheels turn in opposite direction
 
         Parameters
         __________
@@ -237,14 +278,39 @@ class Robot:
             raise ValueError("Direction must be either left ('L') or right ('R')")
 
     def bark(self):
-        """Plays a randomly selected bark sample"""
+        """
+        Plays a randomly selected bark sample
+        """
         self.audio.bark()
 
     def growl(self):
-        """Plays a randomly selected growl sample"""
+        """
+        Plays a randomly selected growl sample
+        """
         self.audio.growl()
 
     def perceive(self, frame, conf_threshold=0.8):
+        """
+        A method that returns a dataframe of all detected object in the frame, with a confidence higher than the threshold.
+
+        Parameters
+        __________
+        frame : numpy.ndarray
+            The image which will be used to detect
+        conf_threshold : float
+            Everything below this number will not be returns
+
+        Returns
+        _______
+        df_threshold : pandas.DataFrame
+            A dataframe containing only the rows which have a higher confidence than the threshold
+
+            * 'class' : the class of the detected object, in string format
+            * 'confidence' : the assigned probability to the detection
+            * 'x' : the x position of the centre of the detected object
+            * 'y' : the y position of the centre of the detected object
+            * 'offset' : the scaled offset from the centre of the camera frame to the centre of the detected object
+        """
         df = self.visual_proc.perceive(frame)
         df_threshold = df[df["confidence"] >= conf_threshold]
         return df_threshold

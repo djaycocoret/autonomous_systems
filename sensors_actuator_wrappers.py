@@ -33,15 +33,15 @@ class Audio_processing:
 
     def bark(self):
         """Plays a random bark audio sample"""
-        max = len(self.bark_)
-        index = randint(0, max - 1)
+        max_len = len(self.bark_)
+        index = randint(0, max_len - 1)
         path = self.bark_[index]
         play_wav(path)
 
     def growl(self):
         """ "Plats a random growl audio sample"""
-        max = len(self.growl_)
-        index = randint(0, max - 1)
+        max_len = len(self.growl_)
+        index = randint(0, max_len - 1)
         path = self.growl_[index]
         play_wav(path)
 
