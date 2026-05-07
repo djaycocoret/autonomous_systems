@@ -4,7 +4,8 @@ from ultralytics import YOLO
 
 
 class Visual_processing:
-    """A class representing the visual processing
+    """
+    A class representing the visual processing
 
     Attributes
     __________
@@ -15,12 +16,22 @@ class Visual_processing:
     """
 
     def __init__(self, model, confidence_threshold=0.8):
-        """Initialises the visual processing class"""
+        """
+        Initialises the visual processing class
+
+        Parameters
+        __________
+        model : string
+            The path of the model that will classify the images.
+        confidence_threshold : float [0, 1]
+            The threshold that will have to for the system to act on the classification.
+        """
         self.model = YOLO(model)
         self.confidence_threshold = confidence_threshold
 
     def perceive(self, input):
-        """Runs YOLO and outputs dataframe of found classes.
+        """R
+        uns YOLO and outputs dataframe of found classes.
 
         Parameters
         __________
@@ -29,13 +40,17 @@ class Visual_processing:
 
         Returns
         _______
-        offset : tuple[float, bool]
-            idk how to describe it yet.
-            0 can be 0 offset of nothing in image
-            Also return the boolean value which states if it has found something
+        df : pandas.DataFrame
+            A dataframe containing the object which have been captured by the object detection model
+
+            * 'class' : the class of the detected object, in string format
+            * 'confidence' : the assigned probability to the detection
+            * 'x' : the x position of the centre of the detected object
+            * 'y' : the y position of the centre of the detected object
+            * 'offset' : the scaled offset from the centre of the camera frame to the centre of the detected object
         """
 
-        h_img, w_img, _ = input.shape
+        _, w_img, _ = input.shape
 
         results = self.model.predict(input)
 
@@ -65,5 +80,9 @@ class Visual_processing:
 
 if __name__ == "__main__":
     img = cv2.imread("test.jpg")
-    see = Visual_processing("yolo26n.pt")
-    print(see.perceive(img))
+
+    v = Visual_processing("yolo26n.pt")
+
+    df = v.perceive(img)
+
+    print(df)

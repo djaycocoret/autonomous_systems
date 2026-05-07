@@ -1,3 +1,15 @@
+# Project description and overview
+
+In this project I have realised the code for an embodied agent.  
+We have chosen to mimmick the behaviour of a dog.
+
+
+
+
+---
+
+# Tutorial
+
 ## How to connect
 
 First make sure the raspberry pi is turned on.
@@ -11,14 +23,14 @@ After connecting to the wifi network, we must connect to the raspberry's termina
 Run the following in the terminal of your laptop:
 
 ```zsh
-ssh group3@as-pi.local
+ssh group3@10.42.0.1
 ```
 
 > Note: first time when connecting you might need to give your computer access to connect to a remote server.
 
 You will be asked for a password, use the same password as used earlier. 
 
-This should show in your terminal: __group3@as-pi:~ $__
+This should show in your terminal: __group3@10.42.0.1:~ $__
 You are now using the terminal of the raspberry pi.
 
 ## How to find the right files
@@ -30,7 +42,7 @@ We do that by using the change directory command followed by the directory
 cd files/autonomous_systems
 ```
 
-Your terminal should now show: __group3@as-pi:~/autonomous_systems $__
+Your terminal should now show: __group3@10.42.0.1:~/autonomous_systems $__
 
 To list the contents of the current directory, you may use the ls command
 
@@ -48,7 +60,7 @@ Use the following terminal command.
 source env/bin/activate
 ```
 
-Your terminal should now show: (env) __group3@as-pi:~/autonomous_systems $__
+Your terminal should now show: (env) __group3@10.42.0.1:~/autonomous_systems $__
 
 ## How to run something
 Since we are using python, we use the python command, followed by the filename.
