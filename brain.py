@@ -26,7 +26,6 @@ class Wander_state(Enum):
     FORWARD = auto()
     BACKWARD = auto()
     SPIN = auto()
-    STOP = auto()
 
 
 class Brain:
@@ -264,16 +263,16 @@ class Brain:
             self.last_state_change = time()
 
         elif self.state == State.WANDERING and found:
-            self.state = State.IDLE
+            self.state = State.TARGETTING
             self.last_state_change = time()
 
         elif self.state == State.IDLE and found:
-            wander_states = list(Wander_state)
-            if self.wander_state != Wander_state.START:
-                state_in_which_found = (
-                    wander_states.index(self.wander_state) - 1
-                )  # exclude start state
-                self.wander_state_probs[state_in_which_found] += self.learning_rate
+            # wander_states = list(Wander_state)
+            # if self.wander_state != Wander_state.START:
+            #     state_in_which_found = (
+            #         wander_states.index(self.wander_state) - 1
+            #     )  # exclude start state
+            #     self.wander_state_probs[state_in_which_found] += self.learning_rate
             self.state = State.CHASING
             self.last_state_change = time()
 
@@ -313,20 +312,19 @@ class Brain:
             self.robot.chase(offset)
 
         elif self.state == State.BARKING:
-            self.robot.bark()
+            self.robot.growl()
 
         elif self.state == State.LOST_TARGET:
+            self.robot.bark()
             left_speed, right_speed = self.robot.return_motor_speeds()
-            left_speed = left_speed - 0.05
-            right_speed = right_speed - 0.05
             self.robot.forward([left_speed, right_speed])
 
         elif self.state == State.TARGETTING:
             offset = self.class_offset(df, "cat")
             if offset < 0:
-                self.robot.spin("L", 0.7)
+                self.robot.spin("L", 0.8)
             else:
-                self.robot.spin("R", 0.7)
+                self.robot.spin("R", 0.8)
 
             if abs(offset) < 0.05:
                 self.target_in_centre = True
@@ -347,23 +345,23 @@ class Brain:
                 self.last_state_change = time()
 
             if self.wander_state == Wander_state.TURN_LEFT:
-                self.robot.turn("L", 0.85)
+                self.robot.turn("L", 0.95)
             elif self.wander_state == Wander_state.TURN_RIGHT:
-                self.robot.turn("R", 0.85)
+                self.robot.turn("R", 0.95)
             elif self.wander_state == Wander_state.FORWARD:
-                self.robot.forward(0.85)
+                self.robot.forward(0.95)
             elif self.wander_state == Wander_state.BACKWARD:
-                self.robot.backward(0.85)
+                self.robot.backward(0.95)
             elif self.wander_state == Wander_state.SPIN:
                 right = int(random.random() > 0.5)
                 direction = ["L", "R"][right]
-                self.robot.spin(direction, 0.4)
+                self.robot.spin(direction, 0.8)
             elif self.wander_state == Wander_state.STOP:
                 self.robot.stop()
 
         elif self.state == State.BLOCKED:
             if time() - self.last_state_change > self.state_duration_change:
-                self.robot.bark()
+                self.robot.growl()
                 self.last_state_change = time()
                 self.robot.backward(0.6)
 

@@ -77,7 +77,7 @@ class Robot:
         self.safety_distance = 0.3
         self.verbose = verbose
 
-        self.scalar_left = 0.85
+        self.scalar_left = 1
         self.scalar_right = 1
 
     @classmethod
@@ -347,7 +347,7 @@ class Robot:
             the offset from center [-0.5, 0.5]
         """
 
-        print(offset)
+        print(f"Offset: {offset}")
 
         if offset > 0:
             self.left_motor.forward(1 * self.return_motor_scalars()[0])

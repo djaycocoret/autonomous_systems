@@ -76,3 +76,13 @@ class Visual_processing:
         df = pd.DataFrame(frame, columns=["class", "confidence", "x", "y", "offset"])
 
         return df
+
+
+if __name__ == "__main__":
+    img = cv2.imread("test.jpg")
+
+    v = Visual_processing("yolo26n.pt")
+
+    df = v.perceive(img)
+
+    print(df)

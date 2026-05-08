@@ -1,4 +1,5 @@
-from random import randint
+import random
+import threading
 
 from gpiozero import DigitalOutputDevice, DistanceSensor, PWMOutputDevice
 
@@ -15,35 +16,48 @@ class Audio_processing:
     growl : List[str]
         A list containing the path at which the various audio samples of growls reside"""
 
-    def __init__(self, bark, growl):
-        """Initialses the Audio_processing class
+    def __init__(self, barks, growls):
+        self.barks = list(barks)
+        self.growls = list(growls)
+        # The lock ensures only one audio thread runs at a time
+        self.audio_lock = threading.Lock()
 
-        Parameters
-        __________
-        bark : List(str)
-            A list containing one or several paths of a bark audio sample in wav format
-        growl : List(str)
-            A list containing one or several paths of a growl audio sample in wav format
+    def _audio_worker(self, path):
         """
-        self.bark_ = list()
-        self.bark_.extend(bark)
+        The logic running inside the thread.
+        It plays the sound and then releases the lock when finished.
+        """
+        try:
+            play_wav(path)
+        finally:
+            # Always release the lock, even if play_wav crashes
+            self.audio_lock.release()
 
-        self.growl_ = list()
-        self.growl_.extend(growl)
+    def _request_playback(self, audio_list):
+        """
+        Internal logic to check the lock and spawn a thread.
+        If the lock is busy, it simply skips.
+        """
+        if not audio_list:
+            return
+
+        # Attempt to acquire the lock without waiting (non-blocking)
+        if self.audio_lock.acquire(blocking=False):
+            path = random.choice(audio_list)
+            thread = threading.Thread(
+                target=self._audio_worker, args=(path,), daemon=True
+            )
+            thread.start()
+        else:
+            print("Audio system busy. Skipping sound.")
 
     def bark(self):
-        """Plays a random bark audio sample"""
-        max_len = len(self.bark_)
-        index = randint(0, max_len - 1)
-        path = self.bark_[index]
-        play_wav(path)
+        """Plays a random bark if the audio device is free."""
+        self._request_playback(self.barks)
 
     def growl(self):
-        """ "Plats a random growl audio sample"""
-        max_len = len(self.growl_)
-        index = randint(0, max_len - 1)
-        path = self.growl_[index]
-        play_wav(path)
+        """Plays a random growl if the audio device is free."""
+        self._request_playback(self.growls)
 
 
 class Distance_sensor:
