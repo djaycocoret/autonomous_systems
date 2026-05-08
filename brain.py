@@ -312,10 +312,10 @@ class Brain:
             self.robot.chase(offset)
 
         elif self.state == State.BARKING:
-            self.robot.bark()
+            self.robot.growl()
 
         elif self.state == State.LOST_TARGET:
-            self.robot.growl()
+            self.robot.bark()
             left_speed, right_speed = self.robot.return_motor_speeds()
             self.robot.forward([left_speed, right_speed])
 
@@ -361,7 +361,7 @@ class Brain:
             BACK_CLEAR = True
 
             if time() - self.last_state_change > self.state_duration_change:
-                self.robot.bark()
+                self.robot.growl()
                 self.last_state_change = time()
                 if BACK_CLEAR:
                     self.robot.backward(0.6)

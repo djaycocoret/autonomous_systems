@@ -78,7 +78,7 @@ class Robot:
         self.verbose = verbose
 
         self.scalar_left = 1
-        self.scalar_right = 0.9
+        self.scalar_right = 1
 
     @classmethod
     def from_config(cls, json_path):
@@ -349,7 +349,7 @@ class Robot:
 
         print(f"Offset: {offset}")
 
-        if offset < 0:
+        if offset > 0:
             self.left_motor.forward(1 * self.return_motor_scalars()[0])
             self.right_motor.forward((1 - offset) * self.return_motor_scalars()[1])
         else:
