@@ -337,6 +337,8 @@ class Brain:
             if time() - self.last_state_change > self.state_duration_change:
                 self.state = State.IDLE
                 self.last_state_change = time()
+                return
+
             if self.wander_state == Wander_state.START:
                 possible_states = list(Wander_state)[1:]  # excludes start state
                 self.wander_state = random.choices(
@@ -360,13 +362,10 @@ class Brain:
                 self.robot.stop()
 
         elif self.state == State.BLOCKED:
-            BACK_CLEAR = True
-
             if time() - self.last_state_change > self.state_duration_change:
                 self.robot.bark()
                 self.last_state_change = time()
-                if BACK_CLEAR:
-                    self.robot.backward(0.6)
+                self.robot.backward(0.6)
 
     def class_in_frame(self, df, class_: str):
         """

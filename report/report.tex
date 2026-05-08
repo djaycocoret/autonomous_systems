@@ -3,6 +3,7 @@
 % --- PACKAGES ---
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
+\usepackage[title]{appendix}
 \usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
@@ -10,42 +11,38 @@
 \usepackage{booktabs} % Professional tables
 \usepackage{verse}    % For linguistic stimuli
 \usepackage{tcolorbox} % For safe/unsafe boxes
+\usepackage{listings}
+
+% Setup colors for code
+\lstset{
+    language=Python,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    stringstyle=\color{red},
+    commentstyle=\color{green!50!black},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    frame=single,
+    breaklines=true
+}
 
 % --- HYPERLINKS ---
 % IEEE usually discourages colored links for printing, but for digital assignments:
 \usepackage[colorlinks=true, linkcolor=black, citecolor=black, urlcolor=blue]{hyperref}
 
 % --- TITLE & AUTHORS ---
-\title{You Only Bark Once: Employing Object Detection\\ to Guide a Robot-Dog}
+\title{You Only Bark Once: Employing Object Detection\\ to Guide a Wheeled Robot-Dog}
 
 % IEEE standard "Conference" author block
 \author{
     \IEEEauthorblockN{Djayco Coret}
-    \IEEEauthorblockA{\textit{Dept. of Cognitive Science \& AI} \\
+    \IEEEauthorblockA{\textit{Autonomous Systems} \\
     \textit{Tilburg University}\\
     Student ID: 123456 \\
     your.name@tilburguniversity.edu}
     \and
     \IEEEauthorblockN{Ivo Snels}
-    \IEEEauthorblockA{\textit{Dept. of Cognitive Science \& AI} \\
-    \textit{Tilburg University}\\
-    Student ID: 123456 \\
-    your.name@tilburguniversity.edu}
-    \and
-    \IEEEauthorblockN{Niels Coumans}
-    \IEEEauthorblockA{\textit{Dept. of Cognitive Science \& AI} \\
-    \textit{Tilburg University}\\
-    Student ID: 123456 \\
-    your.name@tilburguniversity.edu}
-    \and
-    \IEEEauthorblockN{Demir xx}
-    \IEEEauthorblockA{\textit{Dept. of Cognitive Science \& AI} \\
-    \textit{Tilburg University}\\
-    Student ID: 123456 \\
-    your.name@tilburguniversity.edu}
-    \and
-    \IEEEauthorblockN{William xx}
-    \IEEEauthorblockA{\textit{Dept. of Cognitive Science \& AI} \\
+    \IEEEauthorblockA{\textit{Autonomous Systems} \\
     \textit{Tilburg University}\\
     Student ID: 123456 \\
     your.name@tilburguniversity.edu}
@@ -56,7 +53,7 @@
 \maketitle
 
 \begin{abstract}
-This document replicates the IEEE format, which is strictly two-column and 10pt font. It is the standard for the engineering and applied AI side of your Master's program. This abstract should be bold and concise (usually under 200 words).
+Placeholder
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -65,29 +62,153 @@ Edge AI, Embodiment, Autonomous Systems, Robotics
 
 \section{Introduction}
 
-\section{Methods}
+\section{Practical implementation}
 
-\subsection{Perceiving}
-The agent perceives the world through a RGB camera, depth camera, and gyroscope.
-The RGB camera is used to generate input for the object detection model.
-The depth camera is used to ensure the agent does not crash into things.
-The gyroscope is used to get the angular momentum,
-such that inaccuracies in the motors will be corrected (More on this in \ref{move}).
+The agent is organised through three layers of software abstraction: brain, robot, and sensors and actuators.
 
-\subsection{Moving}
-\label{move}
-The agent has two wheels that allow it to move in the environment.
+\subsection{Sense}
 
-\subsection{Social Agent}
-The agent has led light in it's eyes, to signal the current 'mental state'.
+The agent perceives its environment through a distance sensor (sonar) and camera.
+The distance sensor outputs a decimal between 0 and 1, the camera outputs a [dimensions needed] RGB-image. 
 
-\subsection{Practical Implementation}
+The data from the distance sensor is turned into a binary value, which is true iff it is safe to move. 
+
+The RGB-image gets processed by a pre-trained object detection model, yolo26n [reference needed].
+The centre of the bounding box is used as $x$ and $y$ coordinate of the detected object.
+A normalised offset value is calculated using the following function $f$: 
+\begin{align}
+	f(x, w) &=  (x - \frac{w}{2}) \cdot \frac{1}{w}
+	\\ &=  \frac{x}{w} - \frac{1}{2}
+	\label{offset}
+\end{align}
+where $x$ is the $x$-coordinate of the centre of the target and $w$ is the width of the image,
+which normalises the distance from the center by the width of the image;
+where a positive number indicates it is to the right of the center.
+For each object detected b the model the following features are returned:
+class, confidence, $x$, $y$, and offset.
+
+\subsection{Think}
+
+\subsection{Act}
+
+The agent can change its environment by moving on a plane and emitting various sound through a bluetooth box.
+
+It has two dc-motors connected to wheels, making it capable of moving along the $x$-axis as well as rotate along the $y$-axis.
+
+For audio, it uses a subprocess to call aplay, that runs in a separate thread to ensure non-blocking behaviour as audio samples play.
+
+The behaviour will be explained through its corresponding states. Consequently, the behaviour is best understood with a good grasp of the state logic. An overview follows:
+
+\paragraph{IDLE} 
+
+The agent will stop its motors and set its wander state to start.
+
+\paragraph{CHASING} 
+
+The last state change gets adjusted, such that one can keep track of how long the agent has already been chasing.
+
+The offset for the first instance of cat gets used from the data collected at the sense step. The offset is then subtracted from the inner wheel speed, resulting in the agent to move towards the centre of the perceived bounding box. 
+
+\paragraph{BARKING}
+
+Plays a bark audio sample.
+
+
+\paragraph{LOST TARGET}
+
+The agent will reduce its speed.
+The rational behind this is that the agent most likely loses a target because of yolo inconsistencies, or because it moves too rapidly. 
+By using this approach, we have aimed to mitigate these target loses by this behaviour.
+
+Alternative approaches were considered, such as spinning the agent, which have not made
+
+\paragraph{TARGETTING}
+
+The agent will spin in the direction to minimise the offset. 
+If the offset is smaller than a pre-specified number, a variable gets set to true, allowing for a state change in the next action-perception cycle.
+
+\paragraph{WANDERING}
+The wander state is its own finite state machine. Yet these are stochastically 
+
+The agent will first check if it has been in the same state for shorter than a pre-specified value. 
+It will return if false.
+Otherwise it will continue the program.
+
+At the start of the wander state a random wander state will be chosen to be performed till the main state or the wander state changes.
+Wander states include: forward, backward, turn left, turn right, and spin (which is more of a tail waggle, because of a mistake made in code, but a feature worth keeping nonetheless).
+
+\paragraph{BLOCKED}
+
+The agent will first check if it has been in the same state for longer than a pre-specified value. 
+Agent will bark, update the last state change, and go backwards.
 
 
 \section{Discussion}
 
+Intro to discussion
+
+The motors had inconsistent speeds at similar PWM signals, resulting in the agent steering to one side.
+This was mitigated by using values to scale the PWM signals, yet these had to be changed as the battery depleted.
+
+Ultimately, movement requires some proprioceptive abilities about how one has moved.
+
+
+inference time
+
+distance sensor on surfaces at an angle.
+
+the distance sensor returns a binary value to the brain, limiting complex behaviour dependant on distance.
+
+the reinforcement learning exploited too quickly and was not complex enough and needed 
+
+the last state change is not really a last state change and adds confusion and unnecessary complexion 
+
+\section{Contributions}
+
+\subsection{Djayco Coret}
+Made the motor circuit.
+
+Managed linux environment.
+
+Wrote abstractions for sensors and actuators.
+
+Wrote robot python object.
+
+Wrote vision to motion pipeline.
+
+Wrote brain python object.
+
+Wrote docstrings for knowledge transfer.
+
+Wrote parts of the report.
+
+
+\subsection{Ivo Snels}
+
 
 \bibliographystyle{IEEEtran}
 \bibliography{../ref}
+
+\begin{appendices}
+
+\section{Pictures}
+
+\section{Code}
+
+\lstinputlisting[language=Python, title={brain.py}, label={lst:brain}]{../brain.py}
+
+\lstinputlisting[language=Python, title={robot.py}]{../robot.py}
+
+\lstinputlisting[language=Python, title={camera.py}]{../camera.py}
+
+\lstinputlisting[language=Python, title={visual_processing.py}]{../visual_processing.py}
+
+\lstinputlisting[language=Python, title={sensors_actuators.py}]{../sensors_actuator_wrappers.py}
+
+\lstinputlisting[langauge=Python, title={helper_functions.py}]{../helper_functions.py}
+
+\section{Circuit schematics}
+
+\end{appendices}
 
 \end{document}

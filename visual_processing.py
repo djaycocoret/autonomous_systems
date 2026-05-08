@@ -66,7 +66,7 @@ class Visual_processing:
                 row["class"] = result.names[cls_id]
                 row["confidence"] = float(box.conf[0])
                 row["x"], row["y"] = float(x), float(y)
-                row["offset"] = float((x - w_img / 2) / w_img)
+                row["offset"] = float(x) / w_img - 0.5
 
                 frame.append(row)
 

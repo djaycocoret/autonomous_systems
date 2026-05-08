@@ -13,7 +13,7 @@ class Audio_processing:
     barks : List[str]
         A list containing the path at which the various audio samples of barks reside
     growl : List[str]
-        A list containing the path at which the various audio samples of barks reside"""
+        A list containing the path at which the various audio samples of growls reside"""
 
     def __init__(self, bark, growl):
         """Initialses the Audio_processing class
