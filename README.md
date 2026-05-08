@@ -39,7 +39,7 @@ Next we must change the working directory to that of our project files.
 We do that by using the change directory command followed by the directory
 
 ```zsh
-cd files/autonomous_systems
+cd autonomous_systems
 ```
 
 Your terminal should now show: __group3@10.42.0.1:~/autonomous_systems $__
@@ -64,16 +64,40 @@ Your terminal should now show: (env) __group3@10.42.0.1:~/autonomous_systems $__
 
 ## How to run something
 Since we are using python, we use the python command, followed by the filename.
-As an example we will use test_robot.py. 
+As an example we will use brain.py. 
 Other scripts can be found through using the ls command.
 
 ```zsh
-python test_robot.py
+python brain.py
 ```
 
 The program should now run.
 
 > Make sure to __always__ shut down the program by using `control` + `C`
+
+## What programs are there to run?
+
+### brain.py
+
+This is the main program of the robot and contains the brain python object.
+This program implements the cat seeking behaviour and the audio samples.
+
+### robot.py
+
+This contains the robot object of the robot, which is limited to abstracting hardware control to simple actions.
+Running this program will make it drive in a straight line. 
+
+> Use this program such that you can use appropriate scalars for both wheels!
+
+### camera.py
+
+This contains abstraction for the camera.
+Running this script will take a picture and save it as test.jpg
+
+### visual_processing.py
+
+This contains the abstraction for the object detection model.
+Running this script will use perform object detection on test.jpg
 
 ## How to turn off the raspberry pi
 
